@@ -1,238 +1,184 @@
+
 # Meldra
 
-Add-on de Blender que suelda, cierra y valida una malla para que el **Decimate**
-no abra agujeros y para que los **pesos automáticos** de esqueleto funcionen a
-la primera.
+Blender add-on that welds, closes, and validates a mesh so that **Decimate** doesn't open holes and **automatic weights** for rigging work on the first try.
 
-Está pensado para lo que sale de los generadores 3D por IA y de los
-importadores de `.glb` / `.obj`: mallas que *parecen* sólidas pero que por
-dentro son miles de triángulos sueltos, porque cada esquina de cada cara tiene
-su propio vértice sin soldar.
+It's designed for what comes out of 3D AI generators and `.glb` / `.obj` importers: meshes that _look_ solid but are actually thousands of loose triangles inside, because every corner of every face has its own unwelded vertex.
 
-*Meldra* viene de **meld**, fundir. Es exactamente lo que hace.
+_Meldra_ comes from **meld**—that's exactly what it does.
 
-## El problema, en un número
 
-Sobre la misma esfera de 1283 triángulos, decimando al 30 %:
+![meldra-portada](2f24b70a-0116-4491-94cc-46a632996b1a.webp)
 
-| | superficie conservada | agujeros al terminar |
-|---|---|---|
-| sin soldar | **34,1 %** | 1146 aristas de borde |
-| soldada con Meldra | **99,7 %** | 0 |
+## Installation
 
-Y con esqueleto, sobre la misma malla: sin reparar, los pesos automáticos
-cubren el **0 %** de los vértices; reparada, el **100 %**.
+Requires **Blender 4.2 or higher**, including 5.x.
 
-Las dos tablas salen de `pruebas/prueba.py`, que se puede ejecutar.
+1.  Generate the zip by double-clicking `empaquetar.bat`, or from the console:
+    
 
-## Instalación
+bash
 
-Requiere **Blender 4.2 o superior**, incluido 5.x.
-
-1. Genera el zip haciendo doble clic en `empaquetar.bat`, o desde la consola:
-
-```bash
 empaquetar.bat
-```
 
-2. En Blender: `Edit > Preferences > Add-ons`, botón `▾` arriba a la derecha,
-   **Install from Disk…**, y elige `dist\meldra-2.0.0.zip`.
-   También vale arrastrar el zip a la ventana de Blender.
-3. El panel aparece en la **Vista 3D > barra lateral (tecla `N`) > pestaña
-   "Meldra"**.
+2.  In Blender: `Edit > Preferences > Add-ons`, click the `▾` button at the top right, **Install from Disk…**, and choose `dist\meldra-2.0.0.zip`.  
+    You can also drag the zip into the Blender window.
+    
+3.  The panel appears in the **3D View > sidebar (key `N`) > "Meldra" tab**.
+    
 
-## Cómo usarlo
+## How to use it
 
-1. Selecciona la malla y pulsa **Analizar malla**.
-2. Mira el informe. Todo lo que salga en rojo es un problema real.
-3. Para ver *dónde* está, usa los botones de **Ver el problema**: te mete en
-   modo edición con esos elementos seleccionados.
-4. Pulsa **Reparar todo**.
-5. Comprueba que abajo pone `Malla cerrada`.
-6. Ahora sí, **Decimar**. Y después, **Esqueleto**.
+1.  Select the mesh and click **Analyze Mesh**.
+    
+2.  Check the report. Everything shown in red is a real issue.
+    
+3.  To see _where_ the problem is, use the **View the issue** buttons—they switch to edit mode with those elements selected.
+    
+4.  Click **Repair All**.
+    
+5.  Verify that it says `Mesh closed` at the bottom.
+    
+6.  Now **Decimate**. And then, **Rig**.
+    
 
-### Informe
+### Report
 
-| Línea | Qué significa |
-|---|---|
-| Vértices duplicados | Vértices encima de otro sin soldar. **Esta es la causa de los agujeros al decimar.** |
-| Trozos desconectados | Islas separadas. Más de 1 casi siempre es basura flotante. |
-| Agujeros (aristas borde) | Aristas con una sola cara. Son los agujeros de verdad. |
-| Aristas con >2 caras | Geometría imposible. Rompe booleanos, impresión y rig. |
-| Vértices no-manifold | Dos superficies unidas solo por un punto. |
-| De área cero | Caras degeneradas. Hacen fallar los pesos por calor. |
-| Interiores | La segunda cáscara que traen muchos modelos generados. |
-| Normales incoherentes | Caras vecinas con el giro contrario. |
-| Euler V−E+F | 2 en una malla cerrada sin asas; 0 con un agujero pasante. |
-| Volumen | Solo se calcula si está cerrada. Si sale positivo, las normales miran hacia fuera. |
+Line
 
-### Reparar
+What it means
 
-Los pasos se ejecutan **en este orden**, que es el que importa:
+Duplicate vertices
 
-1. Aplicar rotación y escala.
-2. Quitar shape keys (reparar cambia la topología y las invalida; además
-   bloquean el Decimate).
-3. Limpiar normales personalizadas.
-4. Borrar geometría suelta.
-5. **Soldar vértices** — el paso que arregla el problema.
-6. Disolver degenerados y borrar caras de área cero.
-7. Borrar caras interiores.
-8. Rellenar agujeros.
-9. Borrar trozos sueltos pequeños (opcional, apagado por defecto).
-10. Recalcular normales, y voltear la malla entera si el volumen sale negativo.
+Vertices on top of another that are unwelded. **This is the cause of holes when decimating.**
 
-Entre medias vuelve a barrer vértices huérfanos tres veces, porque soldar y
-disolver crean huérfanos nuevos.
+Disconnected pieces
 
-**Tolerancia de soldadura.** Se calcula sobre la diagonal del modelo, así que
-funciona igual con un modelo de 2 m o de 2 cm:
+Separate islands. More than 1 is almost always floating junk.
 
-- *Precisa* (1e-5 de la diagonal): para mallas de IA y exportaciones glTF/OBJ,
-  donde los duplicados están exactamente en la misma posición. **Es la que
-  quieres casi siempre.**
-- *Normal* (1e-4): escaneos y fotogrametría.
-- *Agresiva* (1e-3): cierra a lo bruto; puede comerse detalle fino.
-- *Manual*: distancia exacta en unidades de Blender.
+Holes (boundary edges)
 
-### Esqueleto
+Edges with only one face. These are the actual holes.
 
-El panel lista los requisitos que exige el reparto de pesos por calor
-(*Bone Heat Weighting*) y da un veredicto. **Preparar para esqueleto** repara y
-además fuerza la escala aplicada y coloca el origen si se lo pides.
-**Emparentar con pesos automáticos** hace el `Ctrl+P > With Automatic Weights`
-y, si falla, dice cuál de los requisitos es el probable culpable.
+Edges with >2 faces
 
-### Reconstruir
+Impossible geometry. Breaks booleans, printing, and rigging.
 
-Último recurso cuando la malla no hay por dónde cogerla. El remesh por voxeles
-**siempre** sale cerrado y manifold, pero se pierden UV y materiales.
-QuadriFlow da topología en cuads y exige una malla ya manifold: repara antes.
+Non-manifold vertices
 
-## Idiomas
+Two surfaces connected only at a single point.
 
-Meldra habla los **48 idiomas que Blender sabe mostrar**. Se traduce solo:
-usa el idioma que tengas puesto en `Preferences > Interface > Translation`.
+Zero area
 
-> Abjasio · Alemán · Árabe · Búlgaro · Catalán · Checo · Chino (simplificado y
-> tradicional) · Coreano · Danés · Eslovaco · Esloveno · Español · Esperanto ·
-> Euskera · Finés · Francés · Georgiano · Griego · Hebreo · Hindi · Húngaro ·
-> Indonesio · Inglés británico · Italiano · Japonés · Kirguís · Lituano ·
-> Malayalam · Neerlandés · Noruego (bokmål) · Persa · Polaco · Portugués
-> (Brasil y Portugal) · Rumano · Ruso · Serbio (cirílico y latino) · Suajili ·
-> Sueco · Tailandés · Tamil · Turco · Ucraniano · Urdu · Vietnamita
+Degenerate faces. Cause heat weight failures.
 
-Son **193 cadenas en 48 idiomas: 9.077 traducciones**, y `pruebas/prueba.py`
-comprueba que ningún idioma tiene claves de más ni de menos, y que los
-marcadores de formato (`%d`, `%s`, `%.4f`) sobreviven a la traducción en el
-mismo orden — un descuadre ahí reventaría el add-on en tiempo de ejecución.
+Interiors
 
-Cada idioma vive en `meldra/idiomas/`, en un diccionario aislado: se puede
-corregir uno sin tocar los demás. Se agradecen las correcciones de hablantes
-nativos.
+The second shell that many generated models come with.
 
-> Para algunos términos que Blender ya traduce por su cuenta (*Holes*, *Loose*,
-> *N-gons*…) Blender usa su propio diccionario y no el nuestro. Es lo deseable:
-> así el add-on habla igual que el resto del programa.
+Inconsistent normals
 
-## Empaquetar y publicar
+Neighboring faces facing opposite directions.
 
-```bash
+Euler V−E+F
+
+2 for a closed mesh without handles; 0 with a through-hole.
+
+Volume
+
+Only calculated if the mesh is closed. If positive, the normals face outward.
+
+### Repair
+
+The steps are executed **in this order**, which is what matters:
+
+1.  Apply rotation and scale.
+    
+2.  Remove shape keys (repair changes topology and invalidates them; they also block Decimate).
+    
+3.  Clear custom normals.
+    
+4.  Delete loose geometry.
+    
+5.  **Weld vertices** — the step that fixes the problem.
+    
+6.  Dissolve degenerates and delete zero-area faces.
+    
+7.  Delete interior faces.
+    
+8.  Fill holes.
+    
+9.  Delete small loose pieces (optional, off by default).
+    
+10.  Recalculate normals, and flip the entire mesh if the volume is negative.
+    
+
+In between, it sweeps for orphan vertices three times, because welding and dissolving create new orphans.
+
+**Weld tolerance.** It's calculated based on the model's diagonal, so it works equally well on a 2 m or 2 cm model:
+
+-   _Precise_ (1e-5 of diagonal): for AI meshes and glTF/OBJ exports, where duplicates are exactly at the same position. **This is the one you want almost always.**
+    
+-   _Normal_ (1e-4): for scans and photogrammetry.
+    
+-   _Aggressive_ (1e-3): brute-force closure; may eat fine detail.
+    
+-   _Manual_: exact distance in Blender units.
+    
+
+### Armature
+
+The panel lists the requirements needed for heat weight assignment (_Bone Heat Weighting_) and gives a verdict. **Prepare for Armature** repairs and additionally forces applied scale and sets the origin if you ask it to. **Parent with automatic weights** does the `Ctrl+P > With Automatic Weights` and, if it fails, tells you which requirement is the likely culprit.
+
+### Remesh
+
+Last resort when the mesh is beyond salvage. Voxel remesh **always** comes out closed and manifold, but UVs and materials are lost.  
+QuadriFlow gives quad-based topology and requires the mesh to already be manifold: repair first.
+
+## Languages
+
+Meldra speaks the **48 languages that Blender can display**. It translates itself: it uses the language set in `Preferences > Interface > Translation`.
+
+> Abkhaz · German · Arabic · Bulgarian · Catalan · Czech · Chinese (Simplified and Traditional) · Korean · Danish · Slovak · Slovenian · Spanish · Esperanto · Basque · Finnish · French · Georgian · Greek · Hebrew · Hindi · Hungarian · Indonesian · British English · Italian · Japanese · Kyrgyz · Lithuanian · Malayalam · Dutch · Norwegian (Bokmål) · Persian · Polish · Portuguese (Brazil and Portugal) · Romanian · Russian · Serbian (Cyrillic and Latin) · Swahili · Swedish · Thai · Tamil · Turkish · Ukrainian · Urdu · Vietnamese
+
+That's **193 strings in 48 languages: 9,077 translations**, and `pruebas/prueba.py` checks that no language has extra or missing keys, and that format markers (`%d`, `%s`, `%.4f`) survive translation in the same order — a mismatch there would break the add-on at runtime.
+
+Each language lives in `meldra/idiomas/`, in its own isolated dictionary: you can fix one without touching the others. Corrections from native speakers are welcome.
+
+> For some terms that Blender already translates on its own (_Holes_, _Loose_, _N-gons_…) Blender uses its own dictionary and not ours. This is desirable: it makes the add-on speak the same language as the rest of the program.
+
+## Packaging and publishing
+
+bash
+
 empaquetar.bat
-```
 
-Pasa las 80 comprobaciones, genera `dist\meldra-<versión>.zip`, valida el
-manifiesto con el propio Blender y te dice dónde subirlo. Si no hay Blender
-instalado se salta las pruebas y la validación, pero genera el zip igual.
+Runs the 80 checks, generates `dist\meldra-<version>.zip`, validates the manifest with Blender itself, and tells you where to upload it. If Blender is not installed, it skips the tests and validation, but still generates the zip.
 
-Para subir versión: cambia `version` en `meldra/blender_manifest.toml` y vuelve
-a lanzar el bat. El `id` no cambia, así que Blender reemplaza la instalación
-anterior en vez de duplicarla.
+To bump version: change `version` in `meldra/blender_manifest.toml` and run the batch again. The `id` doesn't change, so Blender replaces the previous installation instead of duplicating it.
 
-También funciona sin Windows:
+Also works without Windows:
 
-```bash
+bash
+
 python empaquetar.py
-```
 
-## Pruebas
 
-```bash
-"C:\Program Files\Blender Foundation\Blender 5.1\blender.exe" --background --factory-startup --python pruebas/prueba.py
-```
+## Note about UVs
 
-Fabrica una malla rota a propósito (todos los vértices desoldados, dos
-agujeros, basura suelta, un trozo flotante, una cara de área cero y unas
-cuantas caras invertidas) y comprueba **80 cosas**: el diagnóstico, la
-reparación, que el decimate ya no rompe nada, la decimación por número de
-triángulos, el rig con pesos automáticos, varias mallas a la vez, los botones
-de selección, el remesh, los casos límite (malla vacía, plano, cubo sano, malla
-del revés), la cobertura de los 48 idiomas, que la traducción funciona de
-verdad en Blender, que el panel no referencia iconos ni propiedades que no
-existan, y que el código distribuido no lleva comentarios ni docstrings.
+Welding vertices also merges UV seams, so texture coordinates get distorted along island borders. There's no way around it: duplicate vertices and UV seams are the same thing seen from two sides. If you need to preserve the texture, bake it from the original high-density model onto the decimated one (`Bake` with _Selected to Active_).
 
-Sale con código 1 si algo falla.
+For next time: when importing `.glb`/`.gltf`, check **Merge Vertices** in the _Geometry_ section of the import dialog and you'll skip all of this.
 
-Herramientas de desarrollo, no se distribuyen:
 
-```bash
-blender --background --factory-startup --python pruebas/extraer.py   # lista las cadenas traducibles
-blender --background --factory-startup --python pruebas/idiomas.py   # revisa solo los idiomas
-```
-
-## Rendimiento
-
-Peor caso medido en Blender 5.1.2: una esfera de **983 040 vértices con todo
-desoldado** (327 680 caras sueltas).
-
-| Operación | Tiempo |
-|---|---|
-| Analizar | 2,1 s |
-| Seleccionar duplicados | 0,9 s |
-| Reparar todo | 2,5 s (983 040 → 163 842 vértices, cerrada) |
-| Decimar a 20 000 triángulos | 1,2 s (sigue cerrada) |
-
-## Aviso sobre las UV
-
-Soldar vértices funde también las costuras de UV, así que las coordenadas de
-textura se distorsionan en los bordes de isla. No hay forma de evitarlo: los
-vértices duplicados y las costuras de UV son la misma cosa vista desde dos
-lados. Si necesitas conservar la textura, hornéala del modelo original de alta
-densidad al decimado (`Bake` con *Selected to Active*).
-
-Para la próxima vez: al importar `.glb`/`.gltf`, marca **Merge Vertices** en la
-sección *Geometry* del diálogo de importación y te ahorras todo esto.
-
-## Estructura
-
-```
-meldra/
-  blender_manifest.toml   manifiesto de extensión (Blender 4.2+)
-  __init__.py             registro y alta de las traducciones
-  nucleo.py               análisis y reparación, solo bmesh, sin bpy.ops
-  props.py                ajustes del panel e informe
-  ops.py                  operadores
-  ui.py                   panel de la barra lateral
-  version.py              lee la versión del manifiesto
-  idiomas/                48 idiomas, agrupados por familia
-pruebas/prueba.py         suite contra un Blender real
-pruebas/extraer.py        lista canónica de cadenas traducibles
-pruebas/idiomas.py        validador de traducciones
-empaquetar.bat            genera y valida el zip distribuible
-empaquetar.py             el motor del empaquetado, multiplataforma
-```
-
-`nucleo.py` no toca `bpy.ops` ni el estado del editor a propósito: así se puede
-probar en segundo plano y no depende de en qué modo esté el objeto.
-
-## Créditos
+## Credits
 
 **xander.dice**
 
-- Instagram: [@xander.dice](https://www.instagram.com/xander.dice)
-- YouTube: [@xanderdice](https://www.youtube.com/@xanderdice)
-- Facebook: [djxanderdice](https://www.facebook.com/djxanderdice)
+-   Instagram: [@xander.dice](https://www.instagram.com/xander.dice)
+    
+-   YouTube: [@xanderdice](https://www.youtube.com/@xanderdice)
+    
+-   Facebook: [djxanderdice](https://www.facebook.com/djxanderdice)
+    
 
-## Licencia
-
-GPL-3.0-or-later, como exige cualquier add-on que enlace con la API de Blender.
