@@ -280,6 +280,7 @@ def leer(mat, canales=CANALES) -> dict:
         'imagenes': imagenes_de(mat),
         'fuerza': 1.0,
         'mezclado': bool(mezclas),
+        'geometrico': depende_de_geometria(mat),
     }
 
     if mat is None:
@@ -476,3 +477,63 @@ def tirar(materiales) -> None:
                 bpy.data.materials.remove(mat, do_unlink=True)
         except (ReferenceError, RuntimeError):
             pass
+
+
+# --------------------------------------------- se puede compartir parcela?
+
+# Nodos cuyo resultado depende del OBJETO o de su geometria, no solo de
+# la UV. Si un material usa alguno de estos, dos objetos con el mismo
+# material y las mismas UV NO hornean lo mismo, y compartir parcela en el
+# atlas daria a uno el contenido del otro.
+NODOS_GEOMETRICOS = frozenset((
+    'NEW_GEOMETRY',        # posicion, normal, pointiness, random...
+    'OBJECT_INFO',         # localizacion, color, random por objeto
+    'PARTICLE_INFO',
+    'HAIR_INFO',
+    'POINT_INFO',
+    'ATTRIBUTE',           # atributos por vertice o por objeto
+    'VERTEX_COLOR',
+    'COLOR_ATTRIBUTE',
+    'TANGENT',
+    'BEVEL',
+    'AMBIENT_OCCLUSION',
+    'WIREFRAME',
+    'LAYER_WEIGHT',        # dependen del angulo de vista
+    'FRESNEL',
+    'CAMERA',
+))
+
+# El nodo de coordenadas solo es seguro por su salida UV; las demas
+# (Generated, Object, Camera, Window, Reflection) van con el objeto.
+SALIDAS_SEGURAS_COORD = frozenset(("UV",))
+
+
+def depende_de_geometria(mat, visitados=None) -> str:
+    """Nombre del nodo que ata el material a un objeto concreto, o "".
+
+    Sirve para decidir si varios objetos pueden compartir la misma
+    parcela del atlas. Entra en los grupos de nodos, que es donde suele
+    esconderse lo interesante.
+    """
+    arbol = arbol_de(mat) if not hasattr(mat, "nodes") else mat
+    if arbol is None:
+        return ""
+    visitados = visitados if visitados is not None else set()
+    if id(arbol) in visitados:
+        return ""
+    visitados.add(id(arbol))
+
+    for nodo in arbol.nodes:
+        if nodo.type in NODOS_GEOMETRICOS:
+            return nodo.bl_label or nodo.type
+        if nodo.type == 'TEX_COORD':
+            for salida in nodo.outputs:
+                if not salida.is_linked:
+                    continue
+                if salida.name not in SALIDAS_SEGURAS_COORD:
+                    return "Texture Coordinate > %s" % salida.name
+        if nodo.type == 'GROUP' and nodo.node_tree is not None:
+            dentro = depende_de_geometria(nodo.node_tree, visitados)
+            if dentro:
+                return dentro
+    return ""

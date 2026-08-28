@@ -19,6 +19,7 @@ props y sesenta materiales pasa a tener un material.
 | Difuso, normal, metálico y rugosidad en archivos sueltos | Color base + un mapa ORM que lleva oclusión, rugosidad y metálico en R, G y B |
 | Objetos desperdigados por la escena | Cada uno con el pivote en su centro y en 0,0,0 |
 | UV repartidas a ojo, con huecos | El atlas empaquetado por la forma real de cada isla, hasta un 64% más de texeles aprovechados |
+| El mismo material repetido en 12 objetos | Una sola copia en el atlas: 3× de resolución efectiva |
 
 ## Instalación
 
@@ -155,6 +156,179 @@ Por eso vienen encendidos también emisión y alfa: con la detección puesta
 no cuestan nada si nadie los usa, y si alguien los usa habrías perdido
 esa información sin enterarte.
 
+### Reutilizar lo que se repite
+
+Si cinco objetos usan el mismo material y sus UV leen el mismo trozo de
+esa textura, hornear cinco copias del mismo dibujo en cinco sitios del
+atlas es tirar el atlas a la basura. Atlara lo detecta y les da **una
+sola parcela entre todos**.
+
+Lo que se gana no es espacio: es **nitidez**. El sitio que sobra se lo
+reparten los demás, así que el factor de escala de la bisección sube para
+todo el mundo. Medido, atlas de 512, objetos que comparten un material:
+
+| caso | texeles por objeto | lado equivalente |
+| --- | --- | --- |
+| 5 objetos, sin reutilizar | 21.907 | 148 |
+| 5 objetos, **reutilizando** | 86.400 | **294** |
+| 12 objetos, sin reutilizar | 9.322 | 97 |
+| 12 objetos, **reutilizando** | 86.400 | **294** |
+
+Con doce objetos son **3 veces más resolución efectiva**, 9,3 veces más
+texeles. Y fíjate en que la cifra ya no baja al añadir objetos: el
+contenido está una vez, así que da igual cuántos lo usen.
+
+**La vara de medir tuvo que cambiar para que esto funcionara.** El
+porcentaje de "texeles útiles" sumaba el área de cada parcela sin
+descontar las repetidas, así que **cinco copias del mismo dibujo puntuaban
+cinco veces** y el reparto automático elegía el que duplicaba. Ahora cada
+contenido se cuenta una sola vez: la firma de un pedazo es su material más
+el rectángulo de textura que lee, y se calcula antes de mover nada, porque
+después de empaquetar ya no se sabe quién era copia de quién.
+
+**Cuándo se fusionan dos parcelas.** Sólo si no sale más caro: la caja
+que envuelve a las dos no puede ocupar más que las dos por separado. Dos
+objetos con las UV encima se funden (la unión es la misma caja, se ahorra
+una entera); dos que usan esquinas opuestas de la textura no, porque la
+unión sería un caserón medio vacío.
+
+**Cuándo NO se comparte, pase lo que pase.** Compartir parcela sólo vale
+si los dos hornean lo mismo, y hay materiales que no. Atlara mira el
+árbol de nodos —entrando en los grupos— y se echa atrás si encuentra algo
+que dependa del objeto y no sólo de la UV:
+
+> Object Info · Geometry (posición, normal, pointiness, random) ·
+> atributos y colores de vértice · Particle/Hair Info · Tangent · Bevel ·
+> Ambient Occlusion · Wireframe · Layer Weight · Fresnel · Camera Data ·
+> y las salidas de Texture Coordinate que no sean UV
+
+Dos objetos con un material que multiplica por *Object Info > Random* se
+ven distintos aunque compartan UV: ahí cada uno se queda con su parcela.
+Lo mismo con la oclusión ambiental encendida, que es geométrica por
+definición.
+
+Hay una prueba que hornea un degradado —donde el color de cada texel
+*dice* su coordenada UV— sobre cinco objetos que comparten parcela, y
+comprueba cara por cara que cada una sigue leyendo exactamente su color.
+Y otra que lo comprueba **con los ajustes tal y como vienen de fábrica**,
+sin tocar nada, porque la primera versión de esto funcionaba sólo si
+forzabas el empaquetador a mano.
+
+**UV apiladas.** Si has apilado islas a propósito —el brazo izquierdo y el
+derecho sobre el mismo sitio de la textura, que es una optimización de
+toda la vida— eso es un caso particular de contenido repetido, y se
+respeta. Antes se separaban y cada mitad se llevaba una copia: medido, 4,1
+veces menos texeles por cara para pintar exactamente lo mismo.
+
+> Si fuerzas el empaquetador **por la forma real**, no hay reutilización:
+> el packer de Blender ve islas geométricas independientes y las separa,
+> sin saber que hornean lo mismo. En *Automático* eso ya no importa,
+> porque compara las dos opciones contando contenido único y se queda con
+> la que de verdad da más texeles.
+
+> **Sobre los trim sheets.** Esto no es un trim sheet, y no lo puede ser.
+> Un trim sheet es una técnica de *autoría*: modelas la geometría contra
+> una tira de molduras que diseñaste antes. No hay nada en una malla ya
+> hecha de la que se pueda deducir cuál de sus franjas era una moldura
+> reutilizable. Lo que sí es automatizable —y es de donde sale la
+> ganancia de arriba— es detectar contenido repetido y no guardarlo dos
+> veces.
+
+### El formato de las texturas
+
+Los mapas del atlas se escriben en **PNG** o en **WebP**. WebP pesa
+bastante menos, y hay un detalle que lo hace seguro: en Blender,
+**calidad 100 es sin pérdida**, y aun así ocupa un 38% menos que el PNG
+equivalente. Medido, ida y vuelta, error máximo `0.0000` por canal.
+
+Por eso Atlara reparte así:
+
+| mapa | cómo se guarda | por qué |
+| --- | --- | --- |
+| Color base, Emisión | WebP con la calidad que pidas (90 de fábrica) | Son colores; el ojo perdona |
+| Normal, ORM, Mask Map | WebP **siempre sin pérdida** | Comprimir esto con pérdida mezcla entre sí canales que no tienen nada que ver: la rugosidad se contamina con el metálico, y el normal se llena de artefactos en el sombreado |
+
+Hay una trampa de Blender aquí que conviene saber: **`pack()` ignora el
+formato y empaqueta siempre un PNG**, y encima te cambia el `file_format`
+a `PNG` por la espalda. Se ve mirando los bytes empaquetados: la cabecera
+sigue siendo PNG. Para meter WebP de verdad dentro del `.blend` hay que
+escribir un fichero temporal y empaquetar ése, que es lo que hace Atlara
+—y luego lo borra—. Hay una prueba que lee la firma de los bytes
+empaquetados para que esto no se rompa sin que nadie se entere.
+
+En una escena de prueba, escribir en carpeta pasó de **11,4 KB a 2,2 KB**
+(un 80% menos), y empaquetado dentro del `.blend`, de **238,9 KB a
+106,6 KB** (un 55% menos), dejando el archivo en 222,5 KB en vez de
+335,7 KB.
+
+#### Y en el GLB
+
+Aquí hay que saber una cosa: **para el tamaño del GLB manda el
+exportador de glTF, no Atlara**. Medido con un atlas de 1024 y tres
+mapas:
+
+| atlas de Atlara | exportador glTF | GLB | mapas de datos |
+| --- | --- | --- | --- |
+| PNG | AUTO | 390,8 KB | sin pérdida |
+| PNG | WEBP | **167,6 KB** | con pérdida, también el normal |
+| WebP | AUTO | 210,0 KB | **sin pérdida** |
+
+La combinación que recomiendo para un asset serio es la tercera:
+**Atlara en WebP y el exportador en AUTO**. El GLB baja casi a la mitad
+y los mapas de normales y ORM llegan intactos, porque el exportador se
+limita a copiar los bytes que ya escribió Atlara en vez de recomprimirlo
+todo a calidad 75.
+
+**Dos avisos importantes:**
+
+- El WebP en glTF entra por la extensión `EXT_texture_webp`, y Blender la
+  declara en **`extensionsRequired`**, no en `extensionsUsed`. Eso
+  significa que un visor que no la soporte **rechaza el archivo entero**,
+  no es que se vea peor. Si el GLB tiene que abrirse en cualquier sitio,
+  quédate en PNG.
+- **En un motor AAA esto no te da FPS.** PNG, JPEG y WebP son formatos de
+  *disco*: se descomprimen en CPU al cargar y suben a la GPU sin
+  comprimir. Una textura de 4096 con mipmaps ocupa unos 90 MB en memoria
+  venga del fichero que venga. Unreal y Unity además recomprimen a
+  BC7/BC5/ASTC al importar. Así que el formato de origen sólo cambia lo
+  que pesa en disco y lo que tardas en descargarlo. Donde sí se nota de
+  verdad es en un GLB servido por web (three.js, model-viewer, Babylon).
+
+Quién soporta `EXT_texture_webp`: **sí** three.js, `<model-viewer>`,
+babylon.js (5.0+), Godot (4.1+, sólo importar) y **PlayCanvas**. **No de
+fábrica** Unity (glTFast lo tiene como incidencia abierta) ni Unreal
+(hace falta un plugin de terceros).
+
+En PlayCanvas hay que mirar las dos capas por separado: el motor lo
+resuelve en `texture-source.js`, que lee `EXT_texture_webp` y da
+prioridad a `KHR_texture_basisu`; y el **Editor** no lo importaba —el
+modelo entraba blanco— hasta que lo arreglaron el **22 de abril de
+2025**. Si el Editor os deja los materiales en blanco, es que está sin
+actualizar.
+
+> **Para PlayCanvas, WebP no es lo mejor que puedes hacer.** Fíjate en
+> que el motor prefiere `KHR_texture_basisu` *antes* que WebP. KTX2 con
+> Basis llega comprimido hasta la VRAM (se transcodifica a BC/ASTC/ETC2),
+> así que ahí sí bajas memoria de vídeo 4–8×, no sólo descarga — que es
+> justo lo que WebP **no** hace. Blender no exporta KTX2: su
+> `export_image_format` sólo ofrece `AUTO`, `JPEG`, `WEBP` y `NONE`. Se
+> hace después sobre el GLB, con `gltf-transform` o `gltfpack`.
+
+#### Y en el FBX
+
+El FBX embebe los bytes tal cual, sin recomprimir: el mismo asset pasa de
+**163,6 KB a 113,0 KB** con WebP. Pero **ni Unreal ni Unity aceptan
+`.webp` como textura de origen**, así que lo más probable no es un error
+claro sino una textura que no carga. **Para FBX, quédate en PNG.**
+
+Y un aviso que no tiene que ver con el formato: **el exportador FBX de
+Blender se deja el mapa ORM por el camino**. Medido: el atlas sale con
+tres mapas y al FBX sólo llegan dos. Sólo mapea las ranuras clásicas del
+Principled (color base y normal), y el ORM, que entra por un nodo
+*Separate Color*, desaparece. Si exportas a FBX, escribe las texturas en
+una carpeta y engánchalas a mano en el motor, que además es como se
+trabaja normalmente en un pipeline serio.
+
 ### Las UV
 
 Aquí es donde se gana o se pierde la calidad. El atlas puede tener 2048
@@ -276,6 +450,8 @@ segundo lo borraría, y te avisa cuando eso va a pasar.
 | Verde invertido (DirectX) | Unreal y 3ds Max esperan el verde al revés que Blender, Unity o glTF |
 | Nombre | Prefijo del material y de las texturas |
 | Texturas | Empaquetadas dentro del .blend o escritas en una carpeta |
+| Formato | PNG (lo entiende todo) o WebP (pesa mucho menos) |
+| Calidad | Sólo el color base y la emisión; el normal y el ORM van siempre sin pérdida |
 
 ### Objetos
 
@@ -318,7 +494,7 @@ blender --background --factory-startup --python pruebas/prueba.py
 
 Monta una escena como las que salen de un importador (un objeto con dos
 materiales, otro con uno plano y una luz en medio de la selección) y
-comprueba las 227 cosas que importan: que queda un solo material, que los
+comprueba las 263 cosas que importan: que queda un solo material, que los
 objetos siguen separados y en 0,0,0, que las UV caben en el cuadrado, y
 —lo más importante— que **al muestrear el atlas en la UV de cada cara sale
 el color que tenía esa cara antes**. También cubre emisión, alfa, reparto

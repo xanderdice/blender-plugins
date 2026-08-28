@@ -106,6 +106,7 @@ class ATLARA_PT_atlas(Base, Panel):
             fila.prop(ajustes, "rotar")
             fila.prop(ajustes, "orientar")
         col.prop(ajustes, "densidad")
+        col.prop(ajustes, "reutilizar")
         col.separator()
         col.prop(ajustes, "celda_plana")
         if ajustes.informe.valido and ajustes.informe.planos:
@@ -141,6 +142,10 @@ class ATLARA_PT_canales(Base, Panel):
         col.prop(ajustes, "guardado", text="")
         if ajustes.guardado == 'DISCO':
             col.prop(ajustes, "carpeta")
+        col.prop(ajustes, "formato", expand=True)
+        if ajustes.formato == 'WEBP':
+            col.prop(ajustes, "calidad")
+            col.label(text="Normal y ORM van sin perdida", icon='INFO')
 
 
 class ATLARA_PT_objetos(Base, Panel):

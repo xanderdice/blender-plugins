@@ -107,7 +107,15 @@ GUARDADO = (
     ('EMPAQUETAR', "Dentro del .blend",
      "Las texturas viajan empaquetadas en el archivo"),
     ('DISCO', "En una carpeta",
-     "Escribe los PNG en la carpeta que elijas"),
+     "Escribe los ficheros en la carpeta que elijas"),
+)
+
+FORMATOS = (
+    ('PNG', "PNG",
+     "Sin perdida y lo entiende todo el mundo. Es lo mas pesado"),
+    ('WEBP', "WebP",
+     "Pesa bastante menos. Los mapas de datos (normal, ORM) se guardan "
+     "sin perdida igualmente; la calidad de abajo solo toca al color"),
 )
 
 
@@ -186,6 +194,13 @@ class ATLARA_Ajustes(PropertyGroup):
     rotar: BoolProperty(
         name="Girar trozos", default=True,
         description="Permite girar 90 grados para que quepa mas")
+    reutilizar: BoolProperty(
+        name="Reutilizar repetidos", default=True,
+        description="Cuando varios objetos leen el mismo material sobre "
+                    "el mismo pedazo de textura, se les da UNA sola "
+                    "parcela del atlas en vez de una copia a cada uno. "
+                    "El sitio que sobra se reparte entre los demas, asi "
+                    "que todo sale mas nitido")
     orientar: BoolProperty(
         name="Enderezar trozos", default=True,
         description="Gira cada trozo hasta que su rectangulo envolvente es "
@@ -228,6 +243,14 @@ class ATLARA_Ajustes(PropertyGroup):
         description="Con el que se nombran el material y las texturas")
     guardado: EnumProperty(name="Texturas", items=GUARDADO,
                            default='EMPAQUETAR')
+    formato: EnumProperty(
+        name="Formato", items=FORMATOS, default='PNG',
+        description="En que formato se escriben los mapas del atlas")
+    calidad: IntProperty(
+        name="Calidad", default=90, min=1, max=100, subtype='PERCENTAGE',
+        description="Solo para el color base y la emision. El normal y "
+                    "el ORM nunca se comprimen con perdida, porque eso "
+                    "mezcla canales que no tienen nada que ver")
     carpeta: StringProperty(
         name="Carpeta", default="//texturas/", subtype='DIR_PATH')
 

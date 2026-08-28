@@ -152,16 +152,56 @@ def margen_de(ajustes, lado, trozos=1) -> int:
 # ----------------------------------------------------------- los pedazos
 
 class Trozo:
-    """Un pedazo de UV con su sitio reservado en el atlas."""
+    """Una parcela del atlas y todo lo que la comparte.
 
-    __slots__ = ("estado", "polis", "bucles", "medidas", "rect")
+    Casi siempre lleva un solo miembro: las caras de un material dentro
+    de un objeto, o una isla suelta. Pero cuando varios trozos hornean
+    exactamente el mismo contenido —el mismo material leido sobre el
+    mismo pedazo de sus UV de origen— se juntan aqui y se llevan UNA
+    sola parcela entre todos, en vez de una copia cada uno.
+    """
 
-    def __init__(self, estado, polis, bucles, medidas, rect):
-        self.estado = estado
-        self.polis = polis
-        self.bucles = bucles
+    __slots__ = ("miembros", "medidas", "rect", "clave", "densidad")
+
+    def __init__(self, estado, polis, bucles, medidas, rect, clave=""):
+        self.miembros = [(estado, polis, bucles)]
         self.medidas = medidas
         self.rect = rect
+        self.clave = clave
+        self.densidad = 0.0
+
+    @property
+    def estado(self):
+        return self.miembros[0][0]
+
+    @property
+    def compartido(self) -> bool:
+        return len(self.miembros) > 1
+
+    def caja(self):
+        m = self.medidas
+        return (m['x0'], m['y0'], m['x1'], m['y1'])
+
+    def area_caja(self) -> float:
+        m = self.medidas
+        return (max(m['x1'] - m['x0'], 1e-9)
+                * max(m['y1'] - m['y0'], 1e-9))
+
+    def absorber(self, otro) -> None:
+        """Se queda con el otro trozo: misma parcela para los dos."""
+        self.miembros.extend(otro.miembros)
+        mio, suyo = self.medidas, otro.medidas
+        self.medidas = {
+            'x0': min(mio['x0'], suyo['x0']),
+            'y0': min(mio['y0'], suyo['y0']),
+            'x1': max(mio['x1'], suyo['x1']),
+            'y1': max(mio['y1'], suyo['y1']),
+            # El area util de una parcela compartida es la de UN
+            # ejemplar, no la suma: el contenido esta una sola vez.
+            'areauv': max(mio['areauv'], suyo['areauv']),
+            'area3d': max(mio['area3d'], suyo['area3d']),
+        }
+        self.densidad = max(self.densidad, otro.densidad)
 
 
 class Estado:
@@ -223,18 +263,138 @@ def recoger(estado, fichas, ajustes, celdas_por_material, avisos,
         else:
             reparto = [polis]
 
+        clave = clave_de_reuso(mat, ficha, ajustes)
         for parte in reparto:
             parte = np.asarray(parte, dtype=np.int64)
             bucles = uvs.bucles_de(estado.datos, parte)
             if not len(bucles):
                 continue
-            if ajustes.orientar:
+            if ajustes.orientar and not clave:
+                # Enderezar gira cada trozo por su cuenta, y eso
+                # descoloca dos trozos que venian del mismo sitio. Los
+                # candidatos a compartir parcela no se tocan.
                 uvs.orientar(estado.uv, bucles)
             medidas = uvs.medir(estado.uv, bucles, estado.area3d,
                                 estado.areauv, parte)
             rect = uvs.tamano(medidas, ajustes.densidad, lado)
-            trozos.append(Trozo(estado, parte, bucles, medidas, rect))
+            trozo = Trozo(estado, parte, bucles, medidas, rect, clave)
+            if medidas['areauv'] > 1e-12:
+                trozo.densidad = (medidas['area3d']
+                                  / medidas['areauv']) ** 0.5
+            trozos.append(trozo)
     return trozos
+
+
+def clave_de_reuso(mat, ficha, ajustes) -> str:
+    """Con que otros trozos podria compartir parcela, o "" si con ninguno.
+
+    Dos conjuntos de caras hornean lo mismo si leen el mismo material
+    sobre el mismo pedazo de UV. Eso deja fuera:
+
+      - los materiales cuyo resultado depende del objeto o de su
+        geometria (color de vertice, Object Info, posicion...), porque
+        entonces cada objeto hornea algo distinto;
+      - la oclusion ambiental, que es geometrica por definicion.
+    """
+    if not ajustes.reutilizar or mat is None:
+        return ""
+    if ajustes.usar_ao:
+        return ""
+    if not ficha.get('entendido'):
+        return ""
+    if ficha.get('geometrico'):
+        return ""
+    return mat.name
+
+
+def firma_de_contenido(estado, indice, polis, mat, ficha, ajustes):
+    """Que hornea este pedazo. Dos pedazos con la misma firma dan lo mismo.
+
+    Se calcula ANTES de mover nada, sobre las UV de origen: es el
+    material mas el rectangulo de textura que lee. Si el material
+    depende del objeto, no hay firma que valga y cada uno va por su
+    cuenta.
+    """
+    clave = clave_de_reuso(mat, ficha, ajustes)
+    if not clave:
+        return ('unico', id(estado), int(indice))
+    bucles = uvs.bucles_de(estado.datos, polis)
+    if not len(bucles):
+        return ('unico', id(estado), int(indice))
+    u = estado.uv[bucles, 0]
+    v = estado.uv[bucles, 1]
+    return (clave, round(float(u.min()), 4), round(float(v.min()), 4),
+            round(float(u.max()), 4), round(float(v.max()), 4))
+
+
+def firmas_por_material(estados, fichas, ajustes) -> dict:
+    """Firma de contenido de cada (objeto, ranura de material)."""
+    salida = {}
+    for estado in estados:
+        material = estado.material
+        if not len(material):
+            continue
+        for indice in np.unique(material):
+            polis = np.where(material == indice)[0]
+            if not len(polis):
+                continue
+            mat = material_de(estado.obj, indice)
+            ficha = fichas.get(mat.name if mat is not None else "")
+            if ficha is None:
+                ficha = materiales.leer(mat)
+            salida[(id(estado), int(indice))] = firma_de_contenido(
+                estado, indice, polis, mat, ficha, ajustes)
+    return salida
+
+
+def compartir(trozos, ajustes, avisos) -> list:
+    """Junta los trozos que hornean lo mismo en una sola parcela.
+
+    El criterio para fundir dos parcelas es que no salga mas caro:
+    solo se juntan si la caja que las envuelve a las dos no ocupa mas
+    que las dos por separado. Asi, dos objetos con las UV encima se
+    funden (la union es la misma caja, se ahorra una entera) y dos que
+    usan esquinas opuestas de la textura no, porque la union seria un
+    caserron medio vacio.
+    """
+    if not ajustes.reutilizar:
+        return trozos
+
+    por_clave = {}
+    sueltos = []
+    for trozo in trozos:
+        if trozo.clave:
+            por_clave.setdefault(trozo.clave, []).append(trozo)
+        else:
+            sueltos.append(trozo)
+
+    salida = list(sueltos)
+    ahorrados = 0
+    for clave, grupo in por_clave.items():
+        grupo.sort(key=lambda t: -t.area_caja())
+        cumulos = []
+        for trozo in grupo:
+            for cumulo in cumulos:
+                if cabe_junto(cumulo, trozo):
+                    cumulo.absorber(trozo)
+                    ahorrados += 1
+                    break
+            else:
+                cumulos.append(trozo)
+        salida.extend(cumulos)
+
+    if ahorrados:
+        avisos.append("Reutilizadas %d parcelas repetidas: ese sitio se "
+                      "reparte entre las demas" % ahorrados)
+    return salida
+
+
+def cabe_junto(uno, otro, holgura=1.02) -> bool:
+    """Fundir estas dos parcelas, sale a cuenta?"""
+    ax0, ay0, ax1, ay1 = uno.caja()
+    bx0, by0, bx1, by1 = otro.caja()
+    union = (max(ax1, bx1) - min(ax0, bx0)) * (max(ay1, by1) - min(ay0, by0))
+    return union <= (uno.area_caja() + otro.area_caja()) * holgura
 
 
 # ------------------------------------------------------- material final
@@ -551,6 +711,10 @@ class Proceso:
         desparrama por el atlas.
         """
         celdas_crudas, texturizadas = self._separar_planos()
+        # Las firmas se sacan AHORA, con las UV todavia en su sitio de
+        # origen: despues de empaquetar ya no se sabe quien era copia de
+        # quien.
+        firmas = firmas_por_material(self.estados, self.fichas, self.ajustes)
         islas = 0
         for estado in self.estados:
             polis = texturizadas[id(estado)]
@@ -613,13 +777,27 @@ class Proceso:
                                 1.0, factor)
                     uvs.escribir(estado.mesh, estado.capa, estado.uv)
 
+        # Aqui esta el detalle que decide si el automatico elige bien:
+        # si se suman las areas de todos los trozos, cinco copias del
+        # mismo dibujo puntuan cinco veces y el reparto que DUPLICA gana
+        # al que comparte. Se cuenta una sola vez por contenido.
         util = float(sum(c[2] * c[2] for c in self.celdas.values()))
+        grupos = {}
         for estado in self.estados:
             polis = texturizadas[id(estado)]
             if not len(polis):
                 continue
             areas = uvs.areas_uv(estado.uv, estado.datos)
-            util += float(areas[polis].sum()) * self.lado * self.lado
+            material = estado.material
+            for indice in np.unique(material[polis]):
+                suyas = polis[material[polis] == indice]
+                if not len(suyas):
+                    continue
+                firma = firmas.get((id(estado), int(indice)),
+                                   ('unico', id(estado), int(indice)))
+                area = float(areas[suyas].sum())
+                grupos[firma] = max(grupos.get(firma, 0.0), area)
+        util += sum(grupos.values()) * self.lado * self.lado
         self.util = util / float(self.lado * self.lado)
         self.trozos = []
         self._celdas_crudas = celdas_crudas
@@ -676,6 +854,7 @@ class Proceso:
                 estado.hornear = False
                 trozos.extend(recoger(estado, self.fichas, self.ajustes,
                                       celdas, self.avisos, opcion))
+            trozos = compartir(trozos, self.ajustes, self.avisos)
             margen = margen_de(self.ajustes, self.lado, len(trozos))
             reparto = nucleo.repartir(
                 [t.rect for t in trozos], len(celdas), self.lado, self.lado,
@@ -719,8 +898,9 @@ class Proceso:
                 caja = (x, y, alto_c, ancho_c, True)
             else:
                 caja = (x, y, ancho_c, alto_c, False)
-            uvs.colocar(trozo.estado.uv, trozo.bucles, trozo.medidas, caja,
-                        self.lado, self.lado, margen)
+            for estado, _polis, bucles in trozo.miembros:
+                uvs.colocar(estado.uv, bucles, trozo.medidas, caja,
+                            self.lado, self.lado, margen)
             util += self._texeles_utiles(trozo, caja)
 
         for indice, (clave, partes) in enumerate(self._celdas_crudas.items()):
@@ -904,7 +1084,9 @@ class Proceso:
             if self.ajustes.guardado == 'DISCO' else ""
         for clave, imagen in mapas.items():
             if not clave.startswith("_"):
-                horneado.guardar(imagen, carpeta)
+                horneado.guardar(imagen, carpeta,
+                                 self.ajustes.formato,
+                                 self.ajustes.calidad, clave)
         horneado.tirar_imagenes(temporales)
         return mapas
 

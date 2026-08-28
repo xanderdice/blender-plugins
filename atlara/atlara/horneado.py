@@ -13,6 +13,7 @@ un tercio de memoria en el motor de juego.
 from __future__ import annotations
 
 import os
+import tempfile
 
 import bpy
 import numpy as np
@@ -51,6 +52,14 @@ FONDO = {
 }
 
 DATOS = ('NORMAL', 'METAL', 'RUGOSIDAD', 'AO', 'ALFA', 'ORM', 'MASCARA')
+
+EXTENSION = {'PNG': "png", 'WEBP': "webp"}
+
+# En el WebP de Blender, calidad 100 es *sin perdida*: medido, error
+# maximo 0.0000 por canal en ida y vuelta, y aun asi pesa un 38% menos
+# que el PNG equivalente. Por eso los mapas de datos van siempre a 100 y
+# el ajuste de calidad solo toca a los de color.
+SIN_PERDIDA = 100
 
 
 # --------------------------------------------------------------- imagenes
@@ -105,21 +114,79 @@ def nombre_de_fichero(nombre) -> str:
     return limpio or "atlas"
 
 
-def guardar(img, carpeta) -> str:
+def calidad_de(canal, formato, calidad) -> int:
+    """Que calidad le toca a este mapa.
+
+    Un mapa de normales o un ORM con perdida es un desastre: el codec
+    hace submuestreo de croma y mezcla entre si canales que no tienen
+    nada que ver. Van siempre sin perdida, cueste lo que cueste.
+    """
+    if formato != 'WEBP':
+        return SIN_PERDIDA
+    if canal in DATOS:
+        return SIN_PERDIDA
+    return max(1, min(100, int(calidad)))
+
+
+def guardar(img, carpeta, formato='PNG', calidad=SIN_PERDIDA,
+            canal='BASE') -> str:
     """A disco si hay carpeta, si no empaquetada dentro del .blend."""
-    img.file_format = 'PNG'
+    formato = formato if formato in EXTENSION else 'PNG'
+    img.file_format = formato
+    q = calidad_de(canal, formato, calidad)
     if carpeta and not (carpeta.startswith("//") and not bpy.data.filepath):
         ruta = os.path.join(bpy.path.abspath(carpeta),
-                            nombre_de_fichero(img.name) + ".png")
+                            "%s.%s" % (nombre_de_fichero(img.name),
+                                       EXTENSION[formato]))
         os.makedirs(os.path.dirname(ruta), exist_ok=True)
         img.filepath_raw = ruta
-        img.save()
+        # En PNG el argumento `quality` se reinterpreta como nivel de
+        # compresion, asi que ahi no se toca: se deja el de siempre.
+        if formato == 'WEBP':
+            img.save(quality=q)
+        else:
+            img.save()
         return ruta
-    img.filepath_raw = "//" + img.name + ".png"
+    return empaquetar(img, formato, q)
+
+
+def empaquetar(img, formato, calidad) -> str:
+    """Mete la imagen dentro del .blend.
+
+    Aqui hay una trampa de Blender: `pack()` a secas IGNORA el
+    file_format y empaqueta siempre un PNG, y encima te cambia el
+    file_format a 'PNG' por la espalda. Comprobado mirando los bytes
+    empaquetados: con file_format='WEBP' la cabecera sigue siendo PNG.
+    Para meter WebP de verdad hay que escribir un fichero temporal y
+    empaquetar ese; despues se puede borrar y la imagen sigue dentro.
+    """
+    if formato != 'WEBP':
+        img.filepath_raw = "//%s.png" % img.name
+        try:
+            img.pack()
+        except RuntimeError:
+            return ""
+        return "(empaquetada)"
+
+    carpeta = tempfile.mkdtemp(prefix="atlara_")
+    temporal = os.path.join(carpeta, nombre_de_fichero(img.name) + ".webp")
     try:
+        img.file_format = 'WEBP'
+        img.filepath_raw = temporal
+        img.save(quality=calidad)
         img.pack()
-    except RuntimeError:
+    except (RuntimeError, OSError):
         return ""
+    finally:
+        try:
+            if os.path.exists(temporal):
+                os.remove(temporal)
+            os.rmdir(carpeta)
+        except OSError:
+            pass
+    # El temporal ya no existe: se le deja una ruta sensata al lado del
+    # .blend por si algun dia se desempaqueta.
+    img.filepath_raw = "//%s.webp" % img.name
     return "(empaquetada)"
 
 

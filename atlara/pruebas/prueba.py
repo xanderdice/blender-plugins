@@ -1137,6 +1137,398 @@ def prueba_error_a_medias():
         ajustes.agrupacion = 'AUTO'
 
 
+def prueba_formato_webp():
+    titulo("Guardado en WebP")
+    from atlara import horneado as H
+
+    comprobar(H.calidad_de('NORMAL', 'WEBP', 80) == 100,
+              "el mapa de normales se guarda sin perdida pase lo que pase")
+    comprobar(H.calidad_de('ORM', 'WEBP', 50) == 100,
+              "y el ORM tambien")
+    comprobar(H.calidad_de('BASE', 'WEBP', 80) == 80,
+              "el color base si respeta la calidad pedida")
+    comprobar(H.calidad_de('BASE', 'PNG', 80) == 100,
+              "en PNG la calidad no pinta nada")
+
+    import tempfile
+    carpeta = os.path.join(tempfile.gettempdir(), "atlara_formato")
+    pesos = {}
+    for formato in ('PNG', 'WEBP'):
+        limpiar()
+        obj = cubo("Lata", (0.0, 0.0, 0.0), 1.0)
+        obj.data.materials.append(
+            material_textura("Pintura", VERDE, lado=256, normal=True))
+        seleccionar([obj])
+        ajustes = bpy.context.scene.atlara
+        ajustes.resolucion = '512'
+        ajustes.prefijo = "Fmt" + formato
+        ajustes.guardado = 'DISCO'
+        ajustes.carpeta = carpeta
+        ajustes.formato = formato
+        ajustes.calidad = 90
+        try:
+            comprobar('FINISHED' in bpy.ops.atlara.atlas(),
+                      "%s termina" % formato)
+        finally:
+            ajustes.guardado = 'EMPAQUETAR'
+            ajustes.formato = 'PNG'
+        ext = H.EXTENSION[formato]
+        ficheros = glob.glob(os.path.join(carpeta, "Fmt%s_*.%s"
+                                          % (formato, ext)))
+        comprobar(len(ficheros) >= 2,
+                  "%s escribe %d ficheros .%s" % (formato, len(ficheros), ext))
+        pesos[formato] = sum(os.path.getsize(f) for f in ficheros)
+        for f in ficheros:
+            os.remove(f)
+
+    comprobar(pesos['WEBP'] < pesos['PNG'],
+              "WebP pesa menos: %.1f KB frente a %.1f KB (%.0f%% menos)"
+              % (pesos['WEBP'] / 1024.0, pesos['PNG'] / 1024.0,
+                 (1 - pesos['WEBP'] / max(pesos['PNG'], 1)) * 100))
+
+
+def prueba_webp_sin_perdida_en_datos():
+    titulo("WebP no toca un solo texel del mapa de normales")
+    import tempfile
+    from atlara import horneado as H
+    limpiar()
+    img = bpy.data.images.new("NormalPrueba", 128, 128, alpha=True,
+                              is_data=True)
+    img.colorspace_settings.name = 'Non-Color'
+    rng = np.random.default_rng(11)
+    pix = np.zeros((128, 128, 4), dtype=np.float32)
+    yy, xx = np.mgrid[0:128, 0:128] / 128.0
+    pix[:, :, 0] = np.clip(0.5 + 0.4 * np.sin(xx * 40)
+                           + 0.05 * rng.random((128, 128)), 0, 1)
+    pix[:, :, 1] = np.clip(0.5 + 0.4 * np.cos(yy * 40)
+                           + 0.05 * rng.random((128, 128)), 0, 1)
+    pix[:, :, 2] = 1.0
+    pix[:, :, 3] = 1.0
+    img.pixels.foreach_set(pix.reshape(-1))
+    antes = pixeles(img).copy()
+
+    carpeta = os.path.join(tempfile.gettempdir(), "atlara_sinperdida")
+    os.makedirs(carpeta, exist_ok=True)
+    ruta = H.guardar(img, carpeta, 'WEBP', 60, 'NORMAL')
+    comprobar(ruta.endswith(".webp"), "se escribe como .webp")
+
+    vuelta = bpy.data.images.load(ruta)
+    vuelta.colorspace_settings.name = 'Non-Color'
+    despues = pixeles(vuelta)
+    error = float(np.abs(antes[:, :, :3] - despues[:, :, :3]).max())
+    comprobar(error < 1e-4,
+              "ida y vuelta sin perdida aunque se pida calidad 60 "
+              "(error maximo %.6f)" % error)
+    os.remove(ruta)
+
+
+def cabecera_de(datos) -> str:
+    """Que formato hay dentro del fichero, por su firma."""
+    firma_png = bytes([137, 80, 78, 71, 13, 10, 26, 10])
+    if datos[:8] == firma_png:
+        return "PNG"
+    if datos[:4] == b"RIFF" and datos[8:12] == b"WEBP":
+        return "WEBP"
+    return "desconocido"
+
+
+def prueba_empaquetado_es_webp_de_verdad():
+    titulo("Empaquetado dentro del .blend: WebP de verdad")
+    import tempfile
+    antes_tmp = set(glob.glob(os.path.join(tempfile.gettempdir(),
+                                           "atlara_*")))
+    limpiar()
+    obj = cubo("Bidon", (0.0, 0.0, 0.0), 1.0)
+    obj.data.materials.append(
+        material_textura("Chapa", VERDE, lado=256, normal=True))
+    seleccionar([obj])
+
+    pesos = {}
+    for formato in ('PNG', 'WEBP'):
+        ajustes = bpy.context.scene.atlara
+        ajustes.resolucion = '512'
+        ajustes.prefijo = "Pk" + formato
+        ajustes.guardado = 'EMPAQUETAR'
+        ajustes.formato = formato
+        ajustes.calidad = 90
+        try:
+            comprobar('FINISHED' in bpy.ops.atlara.atlas(),
+                      "%s termina" % formato)
+        finally:
+            ajustes.formato = 'PNG'
+        imgs = [i for i in bpy.data.images
+                if i.name.startswith("Pk" + formato) and i.packed_file]
+        comprobar(len(imgs) >= 2,
+                  "%s deja %d imagenes empaquetadas" % (formato, len(imgs)))
+        cabeceras = {cabecera_de(i.packed_file.data) for i in imgs}
+        comprobar(cabeceras == {formato},
+                  "y por dentro son %s: %s" % (formato, sorted(cabeceras)))
+        pesos[formato] = sum(i.packed_file.size for i in imgs)
+
+    comprobar(pesos['WEBP'] < pesos['PNG'],
+              "WebP empaquetado pesa menos: %.1f KB frente a %.1f KB "
+              "(%.0f%% menos)"
+              % (pesos['WEBP'] / 1024.0, pesos['PNG'] / 1024.0,
+                 (1 - pesos['WEBP'] / max(pesos['PNG'], 1)) * 100))
+
+    normal = [i for i in bpy.data.images
+              if i.name == "PkWEBP_Normal" and i.packed_file]
+    comprobar(bool(normal) and cabecera_de(normal[0].packed_file.data)
+              == "WEBP", "el mapa de normales empaquetado tambien es WebP")
+
+    nuevas = set(glob.glob(os.path.join(tempfile.gettempdir(),
+                                        "atlara_*"))) - antes_tmp
+    comprobar(not nuevas,
+              "y no deja carpetas temporales atras (%s)"
+              % sorted(os.path.basename(c) for c in nuevas))
+
+
+def a_srgb(x):
+    """El buffer de una imagen sRGB guarda los valores ya codificados.
+
+    img.pixels no los devuelve en lineal. Con colores puros (0 y 1) da
+    igual porque la codificacion es la identidad, pero en cuanto se
+    comprueba un degradado hay que codificar lo que se esperaba.
+    """
+    x = np.clip(np.asarray(x, dtype=np.float64), 0.0, 1.0)
+    return np.where(x <= 0.0031308, x * 12.92,
+                    1.055 * np.power(x, 1.0 / 2.4) - 0.055)
+
+
+def material_degradado(nombre, lado=256):
+    """Textura cuyo color DICE su coordenada UV."""
+    mat = bpy.data.materials.new(nombre)
+    if mat.node_tree is None:
+        mat.use_nodes = True
+    bsdf = mat.node_tree.nodes["Principled BSDF"]
+    img = bpy.data.images.new(nombre + "_g", lado, lado, is_data=True)
+    img.colorspace_settings.name = 'Non-Color'
+    pix = np.zeros((lado, lado, 4), dtype=np.float32)
+    yy, xx = np.mgrid[0:lado, 0:lado]
+    pix[:, :, 0] = (xx + 0.5) / lado
+    pix[:, :, 1] = (yy + 0.5) / lado
+    pix[:, :, 3] = 1.0
+    img.pixels.foreach_set(pix.reshape(-1))
+    tex = mat.node_tree.nodes.new('ShaderNodeTexImage')
+    tex.image = img
+    mat.node_tree.links.new(tex.outputs["Color"], bsdf.inputs["Base Color"])
+    return mat
+
+
+def cajas_por_isla(obj):
+    mesh = obj.data
+    uv = uvs.leer(mesh, uvs.capa_origen(mesh))
+    datos = uvs.indices(mesh)
+    salida = []
+    for isla in uvs.islas(uv, np.arange(datos['caras']), datos):
+        b = uvs.bucles_de(datos, isla)
+        salida.append((round(float(uv[b, 0].min()), 3),
+                       round(float(uv[b, 1].min()), 3),
+                       round(float(uv[b, 0].max()), 3),
+                       round(float(uv[b, 1].max()), 3)))
+    return salida
+
+
+def escena_compartida(n, mat):
+    limpiar_menos_datos = None
+    objetos = []
+    for i in range(n):
+        bpy.ops.mesh.primitive_cube_add(size=1, location=(i * 2.0, 0, 0))
+        o = bpy.context.active_object
+        o.name = "Cmp%d" % i
+        o.data.materials.append(mat)
+        objetos.append(o)
+    seleccionar(objetos)
+    return objetos
+
+
+def prueba_reutilizar_parcelas():
+    titulo("Reutilizar parcelas repetidas")
+    limpiar()
+    mat = material_degradado("Comun")
+    objetos = escena_compartida(5, mat)
+    antes = {o.name: uvs.leer(o.data, uvs.capa_origen(o.data)).copy()
+             for o in objetos}
+
+    ajustes = bpy.context.scene.atlara
+    ajustes.resolucion = '512'
+    ajustes.prefijo = "Reuso"
+    ajustes.empaquetador = 'CAJA'
+    ajustes.agrupacion = 'GRUPO'
+    ajustes.reutilizar = True
+    try:
+        comprobar('FINISHED' in bpy.ops.atlara.atlas(), "termina")
+    finally:
+        ajustes.empaquetador = 'AUTO'
+        ajustes.agrupacion = 'AUTO'
+
+    cajas = []
+    for o in objetos:
+        cajas.extend(cajas_por_isla(o))
+    comprobar(len(set(cajas)) == 1,
+              "los 5 objetos comparten UNA sola parcela (%d distintas)"
+              % len(set(cajas)))
+
+    img = bpy.data.images["Reuso_BaseColor"]
+    atlas = pixeles(img)
+    lado = img.size[0]
+    fallos = comprobadas = 0
+    for o in objetos:
+        datos = uvs.indices(o.data)
+        despues = uvs.leer(o.data, uvs.capa_origen(o.data))
+        viejo = antes[o.name]
+        for p in range(datos['caras']):
+            ini = int(datos['inicio'][p])
+            tot = int(datos['total'][p])
+            cu = float(viejo[ini:ini + tot, 0].mean())
+            cv = float(viejo[ini:ini + tot, 1].mean())
+            nu = float(despues[ini:ini + tot, 0].mean())
+            nv = float(despues[ini:ini + tot, 1].mean())
+            x = min(lado - 1, max(0, int(nu * lado)))
+            y = min(lado - 1, max(0, int(nv * lado)))
+            comprobadas += 1
+            if np.abs(atlas[y, x, :3]
+                      - a_srgb((cu, cv, 0.0))).max() > 0.06:
+                fallos += 1
+    comprobar(fallos == 0,
+              "y las %d caras siguen leyendo su color exacto (%d fallan)"
+              % (comprobadas, fallos))
+
+
+def prueba_no_reutilizar_lo_que_depende_del_objeto():
+    titulo("Lo que depende del objeto no se comparte")
+    limpiar()
+    mat = material_degradado("PorObjeto")
+    info = mat.node_tree.nodes.new('ShaderNodeObjectInfo')
+    mezcla = mat.node_tree.nodes.new('ShaderNodeMixRGB')
+    bsdf = mat.node_tree.nodes["Principled BSDF"]
+    tex = [n for n in mat.node_tree.nodes if n.type == 'TEX_IMAGE'][0]
+    mat.node_tree.links.new(tex.outputs["Color"], mezcla.inputs[1])
+    mat.node_tree.links.new(info.outputs["Color"], mezcla.inputs[2])
+    mat.node_tree.links.new(mezcla.outputs[0], bsdf.inputs["Base Color"])
+
+    ficha = materiales.leer(mat)
+    comprobar(bool(ficha['geometrico']),
+              "se detecta que depende del objeto: %s" % ficha['geometrico'])
+
+    objetos = escena_compartida(4, mat)
+    ajustes = bpy.context.scene.atlara
+    ajustes.resolucion = '512'
+    ajustes.prefijo = "NoReuso"
+    ajustes.empaquetador = 'CAJA'
+    ajustes.agrupacion = 'GRUPO'
+    try:
+        comprobar('FINISHED' in bpy.ops.atlara.atlas(), "termina")
+    finally:
+        ajustes.empaquetador = 'AUTO'
+        ajustes.agrupacion = 'AUTO'
+
+    cajas = []
+    for o in objetos:
+        cajas.extend(cajas_por_isla(o))
+    comprobar(len(set(cajas)) == 4,
+              "cada objeto se queda con SU parcela (%d distintas de 4)"
+              % len(set(cajas)))
+
+
+def prueba_criterio_de_fusion():
+    titulo("Cuando compartir sale a cuenta y cuando no")
+    from atlara.proceso import Trozo, cabe_junto
+
+    def trozo(x0, y0, x1, y1):
+        medidas = {'x0': x0, 'y0': y0, 'x1': x1, 'y1': y1,
+                   'areauv': (x1 - x0) * (y1 - y0), 'area3d': 1.0}
+        return Trozo(None, None, None, medidas, (1.0, 1.0), "m")
+
+    comprobar(cabe_junto(trozo(0, 0, 1, 1), trozo(0, 0, 1, 1)),
+              "dos parcelas identicas se funden")
+    comprobar(cabe_junto(trozo(0, 0, 1, 1), trozo(0.1, 0.1, 0.9, 0.9)),
+              "y una dentro de otra tambien")
+    comprobar(not cabe_junto(trozo(0, 0, 0.1, 0.1),
+                             trozo(0.9, 0.9, 1.0, 1.0)),
+              "pero dos en esquinas opuestas no, que la union es un "
+              "caseron vacio")
+    comprobar(cabe_junto(trozo(0, 0, 0.5, 1.0), trozo(0.5, 0, 1.0, 1.0)),
+              "dos mitades pegadas si: la union no cuesta mas")
+
+
+def prueba_reutilizar_de_fabrica():
+    titulo("Reutilizar con los ajustes de fabrica")
+    limpiar()
+    mat = material_degradado("Fabrica")
+    objetos = escena_compartida(5, mat)
+    ajustes = bpy.context.scene.atlara
+    ajustes.resolucion = '512'
+    ajustes.prefijo = "Fab"
+    # A proposito NO se tocan empaquetador ni agrupacion: se prueba
+    # justo lo que se encuentra el usuario al instalar.
+    comprobar(ajustes.empaquetador == 'AUTO' and ajustes.agrupacion == 'AUTO'
+              and ajustes.reutilizar,
+              "los ajustes de fabrica son AUTO/AUTO con reutilizar puesto")
+    comprobar('FINISHED' in bpy.ops.atlara.atlas(), "termina")
+
+    cajas = []
+    for o in objetos:
+        cajas.extend(cajas_por_isla(o))
+    comprobar(len(set(cajas)) == 1,
+              "y de fabrica ya comparte: %d parcelas distintas de 5"
+              % len(set(cajas)))
+
+
+def prueba_islas_apiladas():
+    titulo("Las UV apiladas a proposito se respetan")
+    limpiar()
+    malla = bpy.data.meshes.new("Apilada")
+    verts, caras = [], []
+    for mitad in range(2):
+        for i in range(4):
+            base = len(verts)
+            x = i * 1.5 + mitad * 20.0
+            verts += [(x, 0, 0), (x + 1, 0, 0), (x + 1, 1, 0), (x, 1, 0)]
+            caras.append((base, base + 1, base + 2, base + 3))
+    malla.from_pydata(verts, [], caras)
+    malla.update()
+    obj = bpy.data.objects.new("Apilada", malla)
+    bpy.context.scene.collection.objects.link(obj)
+    obj.data.materials.append(material_degradado("Apilado"))
+
+    capa = malla.uv_layers.new(name="UVMap")
+    datos = uvs.indices(malla)
+    uv = uvs.leer(malla, capa)
+    # Las dos mitades reciben EXACTAMENTE las mismas UV.
+    esquinas = np.asarray([(0.05, 0.05), (0.95, 0.05),
+                           (0.95, 0.95), (0.05, 0.95)])
+    for p in range(datos['caras']):
+        ini = int(datos['inicio'][p])
+        uv[ini:ini + 4] = esquinas
+    uvs.escribir(malla, capa, uv)
+    seleccionar([obj])
+
+    ajustes = bpy.context.scene.atlara
+    ajustes.resolucion = '512'
+    ajustes.prefijo = "Apil"
+    comprobar('FINISHED' in bpy.ops.atlara.atlas(), "termina")
+
+    despues = uvs.leer(malla, uvs.capa_origen(malla))
+    datos = uvs.indices(malla)
+    cajas = set()
+    for p in range(datos['caras']):
+        ini = int(datos['inicio'][p])
+        trozo = despues[ini:ini + 4]
+        cajas.add((round(float(trozo[:, 0].min()), 3),
+                   round(float(trozo[:, 1].min()), 3),
+                   round(float(trozo[:, 0].max()), 3),
+                   round(float(trozo[:, 1].max()), 3)))
+    comprobar(len(cajas) == 1,
+              "las 8 caras apiladas siguen encima unas de otras "
+              "(%d sitios distintos)" % len(cajas))
+    caja = list(cajas)[0]
+    lado_uv = min(caja[2] - caja[0], caja[3] - caja[1])
+    comprobar(lado_uv > 0.5,
+              "y se llevan casi todo el atlas, no un rincon (%.2f de lado)"
+              % lado_uv)
+
+
 def prueba_cancelar():
     titulo("Cancelacion")
     uno, dos, _luz = montar()
@@ -1491,6 +1883,14 @@ def main():
         prueba_reproyectar_con_dos_capas()
         prueba_nombres_de_fichero()
         prueba_error_a_medias()
+        prueba_formato_webp()
+        prueba_webp_sin_perdida_en_datos()
+        prueba_empaquetado_es_webp_de_verdad()
+        prueba_criterio_de_fusion()
+        prueba_reutilizar_parcelas()
+        prueba_no_reutilizar_lo_que_depende_del_objeto()
+        prueba_reutilizar_de_fabrica()
+        prueba_islas_apiladas()
         prueba_solo_el_atlas()
         prueba_cancelar()
         prueba_cancelar_con_lotes_hechos()
