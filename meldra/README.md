@@ -7,6 +7,8 @@ It's designed for what comes out of 3D AI generators and `.glb` / `.obj` importe
 
 _Meldra_ comes from **meld**—that's exactly what it does.
 
+download / install
+[https://github.com/xanderdice/blender-plugins/tree/main/meldra/dist](https://github.com/xanderdice/blender-plugins/tree/main/meldra/dist)
 
 ![meldra-portada](2f24b70a-0116-4491-94cc-46a632996b1a.webp)
 
