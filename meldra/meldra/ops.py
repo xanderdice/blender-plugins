@@ -228,7 +228,7 @@ class MELDRA_OT_seleccionar(Operator):
                     f.select_set(True)
                     n += 1
         elif tipo == 'AREA_CERO':
-            eps = nucleo.epsilon_area(nucleo.diagonal(bm))
+            eps = nucleo.epsilon_area(nucleo.escala(bm))
             for f in bm.faces:
                 if f.calc_area() <= eps:
                     f.select_set(True)

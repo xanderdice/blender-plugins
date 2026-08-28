@@ -13,6 +13,7 @@ import ast
 import glob
 import os
 import sys
+import time
 import tokenize
 
 import bmesh
@@ -426,6 +427,419 @@ def prueba_remesh():
     comprobar(d['duplicados'] == 0, "y sin duplicados")
 
 
+def desde_bmesh(bm, nombre):
+    me = bpy.data.meshes.new(nombre)
+    bm.to_mesh(me)
+    bm.free()
+    obj = bpy.data.objects.new(nombre, me)
+    bpy.context.collection.objects.link(obj)
+    return obj
+
+
+def icoesfera(subdivisiones=3, radio=1.0):
+    bm = bmesh.new()
+    bmesh.ops.create_icosphere(bm, subdivisions=subdivisiones, radius=radio)
+    return bm
+
+
+def malla_con_aleta():
+    """Una esfera cerrada con una cara de mas colgando de una arista."""
+    bm = icoesfera()
+    bm.edges.ensure_lookup_table()
+    a, b = bm.edges[0].verts
+    punta = bm.verts.new((a.co + b.co) * 0.5 + Vector((0.0, 0.0, 0.9)))
+    bm.faces.new((a, b, punta))
+    return desde_bmesh(bm, "Aleta")
+
+
+def malla_con_alambre():
+    """Una esfera cerrada con una arista de alambre entre dos vertices suyos."""
+    bm = icoesfera()
+    bm.verts.ensure_lookup_table()
+    bm.edges.new((bm.verts[0], bm.verts[10]))
+    return desde_bmesh(bm, "Alambre")
+
+
+def malla_dos_cubos():
+    """Dos cubos cerrados que se tocan justo en una arista."""
+    bm = bmesh.new()
+    bmesh.ops.create_cube(bm, size=2.0)
+    otro = bmesh.new()
+    bmesh.ops.create_cube(otro, size=2.0)
+    bmesh.ops.translate(otro, verts=list(otro.verts),
+                        vec=Vector((2.0, 2.0, 0.0)))
+    me = bpy.data.meshes.new("temporal")
+    otro.to_mesh(me)
+    otro.free()
+    bm.from_mesh(me)
+    bpy.data.meshes.remove(me)
+    return desde_bmesh(bm, "DosCubos")
+
+
+def malla_con_pincho():
+    """Una esfera cerrada con dos triangulos sueltos colgando de un vertice.
+
+    Es la forma exacta del golem que salia de un generador: la malla esta entera
+    salvo por unas caras huerfanas que tocan el cuerpo en un solo punto. Sus tres
+    aristas son de borde, asi que el "agujero" es la propia cara y no hay nada que
+    rellenar: faces.new() contesta que la cara ya existe.
+    """
+    bm = icoesfera()
+    bm.verts.ensure_lookup_table()
+    raices = [bm.verts[0], bm.verts[20]]
+    for raiz in raices:
+        a = bm.verts.new(raiz.co * 1.4 + Vector((0.10, 0.0, 0.0)))
+        b = bm.verts.new(raiz.co * 1.4 + Vector((0.0, 0.10, 0.0)))
+        bm.faces.new((raiz, a, b))
+    return desde_bmesh(bm, "Pincho")
+
+
+def malla_muro_interior():
+    """Un cubo cerrado con un tabique dentro pegado a una de sus aristas."""
+    bm = bmesh.new()
+    bmesh.ops.create_cube(bm, size=2.0)
+    bm.faces.ensure_lookup_table()
+    tapa = [f for f in bm.faces if f.calc_center_median().z > 0.9][0]
+    arriba = list(tapa.verts)
+    abajo = [bm.verts.new(v.co - Vector((0.0, 0.0, 2.0))) for v in arriba]
+    for i in range(4):
+        j = (i + 1) % 4
+        bm.faces.new((arriba[i], arriba[j], abajo[j], abajo[i]))
+    return desde_bmesh(bm, "MuroInterior")
+
+
+def reparar_sola(obj):
+    activar(obj)
+    bpy.ops.meldra.reparar()
+    return datos(obj)
+
+
+def prueba_no_manifold():
+    titulo("Geometria no manifold")
+
+    # 1. La aleta: una cara pegada a una arista que ya tenia dos.
+    limpiar_escena()
+    aleta = malla_con_aleta()
+    antes = datos(aleta)
+    comprobar(antes['multiples'] == 1 and antes['bordes'] == 2,
+              "la aleta deja una arista con tres caras y dos bordes")
+    d = reparar_sola(aleta)
+    print("  aleta    : bordes=%d multi=%d cerrada=%s"
+          % (d['bordes'], d['multiples'], d['cerrada']))
+    comprobar(d['cerrada'], "reparar arranca la aleta y CIERRA la malla")
+    comprobar(d['multiples'] == 0, "no queda ninguna arista con mas de dos caras")
+    comprobar(d['volumen'] > 0, "y el volumen sigue saliendo hacia fuera")
+
+    # 2. El alambre pegado a la superficie, que barrer_basura no veia.
+    limpiar_escena()
+    alambre = malla_con_alambre()
+    antes = datos(alambre)
+    comprobar(antes['alambre'] == 1,
+              "el alambre entre dos vertices con cara se detecta")
+    d = reparar_sola(alambre)
+    print("  alambre  : alambre=%d nomanifold=%d cerrada=%s"
+          % (d['alambre'], d['v_nomanifold'], d['cerrada']))
+    comprobar(d['alambre'] == 0, "reparar borra la arista de alambre")
+    comprobar(d['cerrada'], "y la malla vuelve a estar CERRADA")
+
+    # 3. Dos cubos que se tocan: soldar los unia y rompia lo que estaba bien.
+    limpiar_escena()
+    cubos = malla_dos_cubos()
+    antes = datos(cubos)
+    comprobar(antes['cerrada'], "los dos cubos entran cerrados")
+    d = reparar_sola(cubos)
+    print("  dos cubos: multi=%d nomanifold=%d islas=%d volumen=%.2f"
+          % (d['multiples'], d['v_nomanifold'], d['islas'], d['volumen']))
+    comprobar(d['cerrada'], "y SIGUEN cerrados despues de reparar")
+    comprobar(d['multiples'] == 0,
+              "soldar no deja la arista comun con cuatro caras")
+    comprobar(d['v_nomanifold'] == 0, "ni vertices no manifold")
+    comprobar(d['islas'] == 2, "siguen siendo dos piezas")
+    comprobar(abs(d['volumen'] - 16.0) < 1e-4,
+              "y conservan los 16 de volumen entre los dos")
+
+    # 4. El tabique interior sale y el cubo queda limpio.
+    limpiar_escena()
+    muro = malla_muro_interior()
+    d = reparar_sola(muro)
+    print("  muro     : caras=%d cerrada=%s volumen=%.2f"
+          % (d['caras'], d['cerrada'], d['volumen']))
+    comprobar(d['cerrada'], "el cubo con tabique queda CERRADO")
+    comprobar(d['caras'] == 6, "el tabique se va y quedan las seis caras")
+    comprobar(abs(d['volumen'] - 8.0) < 1e-4, "con su volumen de 8")
+
+    # 5. Un vertice donde se tocan dos conos cerrados: se separa en dos.
+    limpiar_escena()
+    bm = bmesh.new()
+    centro = bm.verts.new(Vector((0.0, 0.0, 0.0)))
+    for signo in (1.0, -1.0):
+        anillo = [bm.verts.new((1.0 * signo, 0.0, 1.0 * signo)),
+                  bm.verts.new((0.0, 1.0 * signo, 1.0 * signo)),
+                  bm.verts.new((-1.0 * signo, 0.0, 1.0 * signo)),
+                  bm.verts.new((0.0, -1.0 * signo, 1.0 * signo))]
+        for i in range(4):
+            bm.faces.new((centro, anillo[i], anillo[(i + 1) % 4]))
+        bm.faces.new(anillo)
+    pajarita = desde_bmesh(bm, "Pajarita")
+    antes = datos(pajarita)
+    comprobar(antes['v_nomanifold'] == 1, "detecta el vertice no manifold")
+    d = reparar_sola(pajarita)
+    print("  pajarita : nomanifold=%d islas=%d cerrada=%s"
+          % (d['v_nomanifold'], d['islas'], d['cerrada']))
+    comprobar(d['v_nomanifold'] == 0, "reparar separa el vertice compartido")
+    comprobar(d['islas'] == 2, "y deja los dos conos como dos piezas")
+    comprobar(d['cerrada'], "las dos siguen cerradas")
+
+    # 5b. Y separarlo no deja alambre suelto ni con la limpieza desmarcada.
+    limpiar_escena()
+    otra = malla_dos_cubos()
+    bpy.context.scene.meldra.borrar_sueltos = False
+    d = reparar_sola(otra)
+    bpy.context.scene.meldra.borrar_sueltos = True
+    print("  sin barrer: alambre=%d cerrada=%s" % (d['alambre'], d['cerrada']))
+    comprobar(d['alambre'] == 0,
+              "separar no deja alambre aunque no se barra la basura")
+    comprobar(d['cerrada'], "y los cubos quedan cerrados igual")
+
+    # 6. Todo a la vez sobre una malla desoldada, como las de los generadores.
+    limpiar_escena()
+    bm = icoesfera(subdivisiones=4)
+    bmesh.ops.split_edges(bm, edges=list(bm.edges))
+    bm.faces.ensure_lookup_table()
+    bmesh.ops.delete(bm, geom=[bm.faces[0], bm.faces[9], bm.faces[40]],
+                     context='FACES')
+    for k in range(6):
+        bm.verts.new(Vector((4.0 + k * 0.2, 0.0, 0.0)))
+    bm.verts.ensure_lookup_table()
+    bm.edges.new((bm.verts[0], bm.verts[30]))
+    bm.edges.ensure_lookup_table()
+    x, y = bm.edges[5].verts
+    punta = bm.verts.new((x.co + y.co) * 0.5 + Vector((0.0, 0.0, 1.1)))
+    bm.faces.new((x, y, punta))
+    revuelta = desde_bmesh(bm, "Revuelta")
+    d = reparar_sola(revuelta)
+    print("  revuelta : bordes=%d multi=%d alambre=%d islas=%d cerrada=%s"
+          % (d['bordes'], d['multiples'], d['alambre'], d['islas'],
+             d['cerrada']))
+    comprobar(d['cerrada'], "la malla con todos los males a la vez CIERRA")
+    comprobar(d['bordes'] == 0 and d['multiples'] == 0 and d['alambre'] == 0,
+              "sin agujeros, sin aristas multiples y sin alambre")
+    comprobar(bpy.context.scene.meldra.informe.apto_para_rig,
+              "y el informe la da por apta para rig")
+
+    # 7. El caso del golem: caras huerfanas colgando de un solo vertice.
+    limpiar_escena()
+    pincho = malla_con_pincho()
+    antes = datos(pincho)
+    caras_buenas = antes['caras'] - 2
+    comprobar(antes['bordes'] == 6 and not antes['cerrada'],
+              "los dos triangulos huerfanos dejan 6 aristas de borde")
+    comprobar(antes['islas'] == 1,
+              "tocan el cuerpo por un vertice, asi que cuentan como una pieza")
+    d = reparar_sola(pincho)
+    print("  pincho   : caras=%d bordes=%d islas=%d cerrada=%s"
+          % (d['caras'], d['bordes'], d['islas'], d['cerrada']))
+    comprobar(d['cerrada'], "reparar quita los huerfanos y CIERRA la malla")
+    comprobar(d['caras'] == caras_buenas,
+              "se van las dos caras sueltas y no se toca ninguna mas")
+    comprobar(d['islas'] == 1 and d['volumen'] > 0,
+              "queda una sola pieza con volumen hacia fuera")
+
+    # 8. Pero una malla plana entera no se borra por parecer una hoja suelta.
+    limpiar_escena()
+    bpy.ops.mesh.primitive_plane_add()
+    plano = bpy.context.active_object
+    d = reparar_sola(plano)
+    comprobar(d['caras'] == 1,
+              "el guardarrail salva la malla plana de una sola cara")
+
+
+def parche_con_diagonal_ocupada():
+    """Un parche de cuatro lados cuyas DOS diagonales ya existen en la malla.
+
+    Triangular ese parche a la brava tiene que elegir una de las dos diagonales,
+    y la arista que elija ya tenia sus dos caras: se queda con tres. Es lo que
+    pasaba al rellenar agujeros de mallas importadas de verdad.
+    """
+    bm = bmesh.new()
+    a = bm.verts.new(Vector((-1.0, -1.0, 0.0)))
+    b = bm.verts.new(Vector((1.0, -1.0, 0.0)))
+    c = bm.verts.new(Vector((1.0, 1.0, 0.0)))
+    d = bm.verts.new(Vector((-1.0, 1.0, 0.0)))
+    arriba = bm.verts.new(Vector((0.0, 0.0, 1.0)))
+    abajo = bm.verts.new(Vector((0.0, 0.0, -1.0)))
+    parche = bm.faces.new((a, b, c, d))
+    for x, y in ((a, c), (b, d)):
+        bm.faces.new((x, y, arriba))
+        bm.faces.new((y, x, abajo))
+    return bm, parche
+
+
+def aristas_multiples(bm):
+    return sum(1 for e in bm.edges if len(e.link_faces) > 2)
+
+
+def prueba_triangular_parches():
+    titulo("Triangular los parches sin romper la malla")
+
+    bm, parche = parche_con_diagonal_ocupada()
+    comprobar(aristas_multiples(bm) == 0,
+              "de partida ninguna arista tiene mas de dos caras")
+    bmesh.ops.triangulate(bm, faces=[parche])
+    a_la_brava = aristas_multiples(bm)
+    print("  bmesh.ops.triangulate deja %d aristas con mas de dos caras"
+          % a_la_brava)
+    comprobar(a_la_brava > 0,
+              "triangular a la brava reutiliza una diagonal ya ocupada")
+    bm.free()
+
+    bm, parche = parche_con_diagonal_ocupada()
+    caras_antes = len(bm.faces)
+    hechas = nucleo.triangular_en_abanico(bm, [parche])
+    print("  triangular_en_abanico deja %d aristas con mas de dos caras, "
+          "%d triangulos" % (aristas_multiples(bm), hechas))
+    comprobar(aristas_multiples(bm) == 0,
+              "en abanico NO se crea ninguna arista con mas de dos caras")
+    comprobar(hechas == 4, "el parche de cuatro lados sale en cuatro triangulos")
+    comprobar(len(bm.faces) == caras_antes + 3,
+              "y el parche queda cubierto, no borrado")
+    comprobar(all(len(f.verts) == 3 for f in bm.faces),
+              "no queda ningun n-gon")
+    bm.free()
+
+    # Y de punta a punta: una esfera con un agujero se cierra y se triangula
+    # sin dejar geometria no manifold.
+    limpiar_escena()
+    bm = icoesfera(subdivisiones=3)
+    bm.faces.ensure_lookup_table()
+    fuera = [f for f in bm.faces if f.calc_center_median().z > 0.55]
+    bmesh.ops.delete(bm, geom=fuera, context='FACES')
+    obj = desde_bmesh(bm, "ConAgujero")
+    d = reparar_sola(obj)
+    print("  esfera agujereada: caras=%d bordes=%d multi=%d ngons=%d cerrada=%s"
+          % (d['caras'], d['bordes'], d['multiples'], d['ngons'], d['cerrada']))
+    comprobar(d['cerrada'] and d['multiples'] == 0,
+              "el agujero se tapa sin dejar aristas con mas de dos caras")
+    comprobar(d['ngons'] == 0, "y el parche queda triangulado")
+
+
+def bloque_de_cubos(celdas, nombre):
+    """Cada celda es un cubo cerrado independiente, pegado cara con cara.
+
+    Es lo que queda tras un Ctrl+J sobre un modelo blocky, un kitbash de cajas
+    o un export de voxeles. Entra estanco de verdad, asi que reparar no tiene
+    derecho a tocarlo.
+    """
+    bm = bmesh.new()
+    for (i, j, k) in sorted(set(celdas)):
+        cubo = bmesh.new()
+        bmesh.ops.create_cube(cubo, size=1.0)
+        bmesh.ops.translate(cubo, verts=cubo.verts, vec=(i, j, k))
+        me = bpy.data.meshes.new("temporal")
+        cubo.to_mesh(me)
+        cubo.free()
+        bm.from_mesh(me)
+        bpy.data.meshes.remove(me)
+    return desde_bmesh(bm, nombre)
+
+
+def malla_pajarita_con_uv():
+    """Dos conos pegados por la punta, con UVs en todas las caras."""
+    bm = bmesh.new()
+    centro = bm.verts.new(Vector((0.0, 0.0, 0.0)))
+    for signo in (1.0, -1.0):
+        anillo = [bm.verts.new((1.0 * signo, 0.0, 1.0 * signo)),
+                  bm.verts.new((0.0, 1.0 * signo, 1.0 * signo)),
+                  bm.verts.new((-1.0 * signo, 0.0, 1.0 * signo)),
+                  bm.verts.new((0.0, -1.0 * signo, 1.0 * signo))]
+        for i in range(4):
+            bm.faces.new((centro, anillo[i], anillo[(i + 1) % 4]))
+        bm.faces.new(anillo)
+    capa = bm.loops.layers.uv.new("UVMap")
+    for n, f in enumerate(bm.faces):
+        for m, bucle in enumerate(f.loops):
+            bucle[capa].uv = (0.05 * (n + 1), 0.05 * (m + 1))
+    return desde_bmesh(bm, "PajaritaUV")
+
+
+def prueba_no_destruir():
+    titulo("Reparar no puede empeorar lo que ya estaba bien")
+
+    # 1. Un solido de cubos soldados: al soldar salen tabiques internos, y
+    #    separar los vertices sin mas lo desintegraba en parches sueltos.
+    for nombre, celdas in (
+            ("3x3x3", [(i, j, k) for i in range(3) for j in range(3)
+                       for k in range(3)]),
+            ("losa 5x5", [(i, j, 0) for i in range(5) for j in range(5)]),
+            ("ele", [(i, 0, 0) for i in range(4)]
+             + [(0, j, 0) for j in range(4)] + [(0, 0, k) for k in range(4)])):
+        limpiar_escena()
+        obj = bloque_de_cubos(celdas, nombre)
+        antes = datos(obj)
+        d = reparar_sola(obj)
+        print("  %-9s caras %d -> %d, islas %d -> %d, volumen %.1f -> %.1f"
+              % (nombre, antes['caras'], d['caras'], antes['islas'],
+                 d['islas'], antes['volumen'], d['volumen']))
+        comprobar(antes['cerrada'], "%s: entra cerrado" % nombre)
+        comprobar(d['cerrada'], "%s: y SIGUE cerrado" % nombre)
+        comprobar(d['bordes'] == 0, "%s: sin aristas de borde" % nombre)
+        comprobar(abs(d['volumen'] - antes['volumen']) < 1e-3,
+                  "%s: conserva el volumen entero" % nombre)
+        comprobar(d['islas'] == 1, "%s: queda de una pieza" % nombre)
+
+    # 2. Separar un vertice no manifold no puede llevarse las UVs por delante.
+    limpiar_escena()
+    obj = malla_pajarita_con_uv()
+    antes_uv = sorted(tuple(d.uv) for d in obj.data.uv_layers.active.data)
+    antes = datos(obj)
+    d = reparar_sola(obj)
+    despues_uv = sorted(tuple(x.uv) for x in obj.data.uv_layers.active.data)
+    print("  UVs: %d bucles antes, %d despues" % (len(antes_uv),
+                                                  len(despues_uv)))
+    comprobar(antes['v_nomanifold'] == 1 and d['v_nomanifold'] == 0,
+              "el vertice no manifold se separa")
+    comprobar(despues_uv == antes_uv,
+              "y las UVs salen exactamente iguales, ni una a cero")
+
+    # 3. Un vertice tirado lejos dispara la diagonal, y con ella el umbral de
+    #    soldado y el de area cero: antes se comia la malla entera.
+    for lejos in (0.0, 20000.0, 1000000.0):
+        limpiar_escena()
+        bpy.ops.mesh.primitive_uv_sphere_add(segments=32, ring_count=16)
+        obj = bpy.context.active_object
+        if lejos:
+            obj.data.vertices[0].co.x = lejos
+        antes = datos(obj)
+        d = reparar_sola(obj)
+        print("  vertice a x=%-9.0f area_cero=%d, caras %d -> %d, volumen %.4f"
+              % (lejos, antes['area_cero'], antes['caras'], d['caras'],
+                 d['volumen']))
+        comprobar(antes['area_cero'] == 0,
+                  "x=%.0f: no se inventa caras de area cero" % lejos)
+        comprobar(d['caras'] == antes['caras'],
+                  "x=%.0f: no pierde ni una cara" % lejos)
+        comprobar(d['volumen'] > 4.0,
+                  "x=%.0f: la esfera sigue entera" % lejos)
+
+    # 4. Y el coste no puede dispararse con el numero de parches.
+    limpiar_escena()
+    bm = icoesfera(subdivisiones=5)
+    bmesh.ops.split_edges(bm, edges=list(bm.edges))
+    bm.faces.ensure_lookup_table()
+    bmesh.ops.delete(bm, geom=[bm.faces[i] for i in range(0, len(bm.faces), 11)],
+                     context='FACES')
+    obj = desde_bmesh(bm, "MuchosAgujeros")
+    antes = datos(obj)
+    reloj = time.time()
+    d = reparar_sola(obj)
+    tardo = time.time() - reloj
+    print("  %d vertices y %d aristas de borde reparadas en %.2fs"
+          % (antes['verts'], antes['bordes'], tardo))
+    comprobar(d['cerrada'], "la malla grande y agujereada cierra")
+    comprobar(tardo < 30.0,
+              "y tarda menos de 30 segundos (%.2fs)" % tardo)
+
+
 def prueba_casos_limite():
     titulo("Casos limite")
     limpiar_escena()
@@ -622,6 +1036,9 @@ def main():
         prueba_diagnostico()
         prueba_decimate_rompe()
         prueba_reparar()
+        prueba_no_manifold()
+        prueba_triangular_parches()
+        prueba_no_destruir()
         prueba_decimate_bien()
         prueba_decimate_sin_aplicar()
         prueba_varias_mallas()

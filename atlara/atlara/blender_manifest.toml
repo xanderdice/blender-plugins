@@ -1,0 +1,20 @@
+schema_version = "1.0.0"
+
+id = "atlara"
+version = "1.0.0"
+name = "Atlara"
+tagline = "Funde materiales y objetos en un solo atlas y un solo material"
+maintainer = "xander.dice"
+type = "add-on"
+
+tags = ["Material", "Pipeline"]
+
+blender_version_min = "4.2.0"
+
+license = [
+  "SPDX:GPL-3.0-or-later",
+]
+
+copyright = [
+  "2026 xander.dice",
+]
