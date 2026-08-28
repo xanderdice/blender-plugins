@@ -840,6 +840,68 @@ def prueba_no_destruir():
               "y tarda menos de 30 segundos (%.2fs)" % tardo)
 
 
+def prueba_costuras():
+    """El caso de exportar a glTF: el formato parte los vertices de costura.
+
+    En glTF un vertice ES posicion mas UV, asi que un vertice que este sobre
+    una costura del mapa UV se duplica al exportar. Al reabrir, la malla llega
+    con las costuras despegadas y parece agujereada, cuando en realidad basta
+    soldarla. El informe tiene que saber distinguir eso de un agujero real.
+    """
+    titulo("Costuras despegadas contra agujeros de verdad")
+
+    # 1. Una esfera cerrada a la que se le despegan unas costuras.
+    limpiar_escena()
+    bm = icoesfera(subdivisiones=3)
+    bm.edges.ensure_lookup_table()
+    bmesh.ops.split_edges(bm, edges=[bm.edges[i]
+                                     for i in range(0, len(bm.edges), 5)])
+    obj = desde_bmesh(bm, "Costuras")
+    d = datos(obj)
+    print("  costuras : duplicados=%d bordes=%d cerrada=%s cierra_al_soldar=%s"
+          % (d['duplicados'], d['bordes'], d['cerrada'],
+             d['cerrada_al_soldar']))
+    comprobar(not d['cerrada'] and d['bordes'] > 0,
+              "la malla despegada no esta cerrada")
+    comprobar(d['duplicados'] > 0, "y se ven los vertices duplicados")
+    comprobar(d['cerrada_al_soldar'],
+              "pero el informe sabe que soldando queda cerrada")
+    d = reparar_sola(obj)
+    comprobar(d['cerrada'], "y reparar la cierra de verdad")
+
+    # 2. Un agujero de verdad no se arregla soldando, y el informe no miente.
+    limpiar_escena()
+    bm = icoesfera(subdivisiones=3)
+    bm.faces.ensure_lookup_table()
+    bmesh.ops.delete(bm, geom=[f for f in bm.faces
+                               if f.calc_center_median().z > 0.55],
+                     context='FACES')
+    agujero = desde_bmesh(bm, "Agujero")
+    d = datos(agujero)
+    print("  agujero  : duplicados=%d bordes=%d cerrada=%s cierra_al_soldar=%s"
+          % (d['duplicados'], d['bordes'], d['cerrada'],
+             d['cerrada_al_soldar']))
+    comprobar(not d['cerrada'] and not d['cerrada_al_soldar'],
+              "un agujero de verdad no se cierra soldando")
+
+    # 3. Una malla ya cerrada sigue contando como cerrada al soldar.
+    limpiar_escena()
+    bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=3)
+    d = datos(bpy.context.active_object)
+    comprobar(d['cerrada'] and d['cerrada_al_soldar'],
+              "una malla sana cumple las dos cosas")
+
+    # 4. Y el veredicto del panel dice las tres cosas distintas.
+    from meldra import ui
+    fuente = open(os.path.join(RAIZ, "meldra", "ui.py"),
+                  encoding="utf-8").read()
+    for texto in ("Watertight mesh", "Watertight once welded",
+                  "Not watertight"):
+        comprobar('text="%s"' % texto in fuente,
+                  "el panel puede decir %r" % texto)
+    comprobar(ui.MELDRA_PT_principal is not None, "el panel sigue registrado")
+
+
 def prueba_casos_limite():
     titulo("Casos limite")
     limpiar_escena()
@@ -963,6 +1025,9 @@ def prueba_traduccion_viva():
         ("ja_JP", "Repair All", "すべて修復"),
         ("ar_EG", "Repair All", "إصلاح الكل"),
         ("zh_HANS", "Analyze Mesh", "分析网格"),
+        ("es", "Watertight once welded", "Cerrada al soldar"),
+        ("pl_PL", "Watertight once welded", "Zamknięta po scaleniu"),
+        ("ko_KR", "Watertight once welded", "병합하면 닫힘"),
     )
     try:
         vista.use_translate_interface = True
@@ -1039,6 +1104,7 @@ def main():
         prueba_no_manifold()
         prueba_triangular_parches()
         prueba_no_destruir()
+        prueba_costuras()
         prueba_decimate_bien()
         prueba_decimate_sin_aplicar()
         prueba_varias_mallas()

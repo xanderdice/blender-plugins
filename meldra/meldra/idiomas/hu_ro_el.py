@@ -199,6 +199,8 @@ HU = {
     "Shape keys": "Shape key-ek",
     "Small parts": "Kis darabok",
     "Smaller Than": "Kisebbek mint",
+    "Split at the seams: welding %d duplicates closes it":
+        "A varratoknál szétvágva: %d duplikátum összeolvasztása lezárja",
     "Split normals ruin the shading after welding":
         "A szétvágott normálisok tönkreteszik az árnyékolást az összeolvasztás "
         "után",
@@ -252,6 +254,7 @@ HU = {
     "Watertight mesh": "Zárt háló",
     "Watertight mesh. Ready to decimate and rig":
         "Zárt háló. Kész a decimálásra és a riggelésre",
+    "Watertight once welded": "Összeolvasztás után zárt",
     "Weld Vertices": "Vertexek összeolvasztása",
     "Weld distance": "Összeolvasztási távolság",
     "Weld distance in Blender units":
@@ -483,6 +486,8 @@ RO = {
     "Shape keys": "Shape keys",
     "Small parts": "Bucăți mici",
     "Smaller Than": "Mai mici decât",
+    "Split at the seams: welding %d duplicates closes it":
+        "Despicată la cusături: contopirea a %d duplicate o închide",
     "Split normals ruin the shading after welding":
         "Normalele divizate strică umbrirea după contopire",
     "Still not watertight": "Tot nu este închisă",
@@ -534,6 +539,7 @@ RO = {
     "Watertight mesh": "Plasă închisă",
     "Watertight mesh. Ready to decimate and rig":
         "Plasă închisă. Gata de decimare și de rig",
+    "Watertight once welded": "Închisă după contopire",
     "Weld Vertices": "Contopește vârfurile",
     "Weld distance": "Distanța de contopire",
     "Weld distance in Blender units":
@@ -765,6 +771,8 @@ EL = {
     "Shape keys": "Shape keys",
     "Small parts": "Μικρά κομμάτια",
     "Smaller Than": "Μικρότερα από",
+    "Split at the seams: welding %d duplicates closes it":
+        "Χωρισμένο στις ραφές: η συγχώνευση %d διπλών το κλείνει",
     "Split normals ruin the shading after welding":
         "Τα διαχωρισμένα normals χαλάνε τη σκίαση μετά τη συγχώνευση",
     "Still not watertight": "Ακόμα δεν είναι κλειστό",
@@ -818,6 +826,7 @@ EL = {
     "Watertight mesh": "Κλειστό πλέγμα",
     "Watertight mesh. Ready to decimate and rig":
         "Κλειστό πλέγμα. Έτοιμο για αραίωση και rigging",
+    "Watertight once welded": "Κλειστό μετά τη συγχώνευση",
     "Weld Vertices": "Συγχώνευση κορυφών",
     "Weld distance": "Απόσταση συγχώνευσης",
     "Weld distance in Blender units":

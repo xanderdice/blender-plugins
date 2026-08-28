@@ -198,6 +198,8 @@ LT = {
     "Shape keys": "Shape keys",
     "Small parts": "Maži gabalai",
     "Smaller Than": "Mažesni nei",
+    "Split at the seams: welding %d duplicates closes it":
+        "Perskirtas ties siūlėmis: sulydžius %d dublikatų užsidaro",
     "Split normals ruin the shading after welding":
         "Padalintos normalės sugadina šešėliavimą po suliejimo",
     "Still not watertight": "Vis dar neuždaras",
@@ -247,6 +249,7 @@ LT = {
     "Watertight mesh": "Uždaras tinklas",
     "Watertight mesh. Ready to decimate and rig":
         "Uždaras tinklas. Paruoštas retinti ir rigginti",
+    "Watertight once welded": "Uždaras sulydžius",
     "Weld Vertices": "Sulieti viršūnes",
     "Weld distance": "Suliejimo atstumas",
     "Weld distance in Blender units": "Suliejimo atstumas Blender vienetais",
@@ -476,6 +479,8 @@ EU = {
     "Shape keys": "Shape key-ak",
     "Small parts": "Zati txikiak",
     "Smaller Than": "Hau baino txikiagoak",
+    "Split at the seams: welding %d duplicates closes it":
+        "Kosturetan banatuta: %d bikoiztu batzeak ixten du",
     "Split normals ruin the shading after welding":
         "Zatitutako normalek itzaldura hondatzen dute batu ondoren",
     "Still not watertight": "Oraindik ez dago itxita",
@@ -527,6 +532,7 @@ EU = {
     "Watertight mesh": "Sare itxia",
     "Watertight mesh. Ready to decimate and rig":
         "Sare itxia. Bakantzeko eta riggeatzeko prest",
+    "Watertight once welded": "Itxia batu ondoren",
     "Weld Vertices": "Batu erpinak",
     "Weld distance": "Batze-distantzia",
     "Weld distance in Blender units": "Batze-distantzia Blender unitatetan",
@@ -755,6 +761,8 @@ KA = {
     "Shape keys": "Shape keys",
     "Small parts": "პატარა ნაჭრები",
     "Smaller Than": "უფრო პატარა ვიდრე",
+    "Split at the seams: welding %d duplicates closes it":
+        "ნაკერებზე გაყოფილი: %d დუბლიკატის შედუღება ხურავს",
     "Split normals ruin the shading after welding":
         "გაყოფილი ნორმალები აფუჭებს დაჩრდილვას შედუღების შემდეგ",
     "Still not watertight": "ჯერ კიდევ არ არის დახურული",
@@ -804,6 +812,7 @@ KA = {
     "Watertight mesh": "დახურული ბადე",
     "Watertight mesh. Ready to decimate and rig":
         "დახურული ბადე. მზადაა დეციმაციისა და რიგინგისთვის",
+    "Watertight once welded": "დახურული შედუღების შემდეგ",
     "Weld Vertices": "წვეროების შედუღება",
     "Weld distance": "შედუღების მანძილი",
     "Weld distance in Blender units":

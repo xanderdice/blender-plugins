@@ -109,12 +109,18 @@ def islas(bm):
     return padre, caras, verts
 
 
-def contar_duplicados(bm, dist: float) -> int:
+def sondear_soldadura(bm, dist: float) -> tuple:
     tmp = bm.copy()
     try:
         antes = len(tmp.verts)
         bmesh.ops.remove_doubles(tmp, verts=list(tmp.verts), dist=dist)
-        return antes - len(tmp.verts)
+        quitados = antes - len(tmp.verts)
+        basura = [v for v in tmp.verts if not v.link_faces]
+        if basura:
+            bmesh.ops.delete(tmp, geom=basura, context='VERTS')
+        cerrada = bool(tmp.faces) and all(
+            len(e.link_faces) == 2 for e in tmp.edges)
+        return quitados, cerrada
     finally:
         tmp.free()
 
@@ -350,6 +356,7 @@ def analizar(bm, dist=None) -> dict:
     _, caras_isla, _ = islas(bm)
     tam = sorted(caras_isla.values(), reverse=True)
 
+    duplicados, cierra_al_soldar = sondear_soldadura(bm, dist)
     cerrada = bool(bm.faces) and not (n_borde or n_alambre or n_multi or n_sueltos)
     volumen = bm.calc_volume(signed=True) if cerrada else 0.0
 
@@ -361,7 +368,7 @@ def analizar(bm, dist=None) -> dict:
         'quads': n_quads,
         'ngons': n_ngons,
         'triangulos': n_equiv,
-        'duplicados': contar_duplicados(bm, dist),
+        'duplicados': duplicados,
         'islas': len(tam),
         'isla_mayor': tam[0] if tam else 0,
         'isla_menor': tam[-1] if tam else 0,
@@ -377,6 +384,7 @@ def analizar(bm, dist=None) -> dict:
         'area': area_total,
         'volumen': volumen,
         'cerrada': cerrada,
+        'cerrada_al_soldar': cerrada or cierra_al_soldar,
         'invertida': cerrada and volumen < 0.0,
         'diagonal': d,
         'umbral': dist,

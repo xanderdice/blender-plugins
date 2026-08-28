@@ -199,6 +199,8 @@ DE = {
     "Shape keys": "Shape Keys",
     "Small parts": "Kleine Teile",
     "Smaller Than": "Kleiner als",
+    "Split at the seams: welding %d duplicates closes it":
+        "An den Nähten getrennt: %d Duplikate verschmelzen schließt sie",
     "Split normals ruin the shading after welding":
         "Geteilte Normalen ruinieren das Shading nach dem Verschmelzen",
     "Still not watertight": "Immer noch nicht geschlossen",
@@ -251,6 +253,7 @@ DE = {
     "Watertight mesh": "Geschlossenes Mesh",
     "Watertight mesh. Ready to decimate and rig":
         "Geschlossenes Mesh. Bereit zum Dezimieren und Riggen",
+    "Watertight once welded": "Nach dem Verschmelzen geschlossen",
     "Weld Vertices": "Vertices verschmelzen",
     "Weld distance": "Verschmelzabstand",
     "Weld distance in Blender units":
@@ -481,6 +484,8 @@ NL = {
     "Shape keys": "Shape keys",
     "Small parts": "Kleine stukken",
     "Smaller Than": "Kleiner dan",
+    "Split at the seams: welding %d duplicates closes it":
+        "Gesplitst op de naden: %d duplicaten samenvoegen sluit hem",
     "Split normals ruin the shading after welding":
         "Gesplitste normalen verpesten de shading na het samenvoegen",
     "Still not watertight": "Nog steeds niet gesloten",
@@ -533,6 +538,7 @@ NL = {
     "Watertight mesh": "Gesloten mesh",
     "Watertight mesh. Ready to decimate and rig":
         "Gesloten mesh. Klaar om te decimeren en te riggen",
+    "Watertight once welded": "Gesloten na samenvoegen",
     "Weld Vertices": "Vertices samenvoegen",
     "Weld distance": "Samenvoegafstand",
     "Weld distance in Blender units":

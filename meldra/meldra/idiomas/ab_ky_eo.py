@@ -197,6 +197,8 @@ EO = {
     "Shape keys": "Formoŝlosiloj",
     "Small parts": "Malgrandaj pecoj",
     "Smaller Than": "Pli malgrandaj ol",
+    "Split at the seams: welding %d duplicates closes it":
+        "Disigita ĉe la kudroj: kunfandi %d duoblaĵojn fermas ĝin",
     "Split normals ruin the shading after welding":
         "Dividitaj normaloj difektas la ombradon post la kunfando",
     "Still not watertight": "Ankoraŭ ne fermita",
@@ -248,6 +250,7 @@ EO = {
     "Watertight mesh": "Fermita maŝo",
     "Watertight mesh. Ready to decimate and rig":
         "Fermita maŝo. Preta por maldensigi kaj rigi",
+    "Watertight once welded": "Fermita post kunfando",
     "Weld Vertices": "Kunfandi verticojn",
     "Weld distance": "Kunfanda distanco",
     "Weld distance in Blender units": "Kunfanda distanco en Blender-unuoj",
@@ -477,6 +480,8 @@ KY = {
     "Shape keys": "Shape keys",
     "Small parts": "Кичине бөлүктөр",
     "Smaller Than": "Мындан кичине",
+    "Split at the seams: welding %d duplicates closes it":
+        "Тигиштерден ажыраган: %d кайталанганды бириктирүү аны жабат",
     "Split normals ruin the shading after welding":
         "Бөлүнгөн нормалдар бириктирүүдөн кийин көлөкөнү бузат",
     "Still not watertight": "Дагы деле жабык эмес",
@@ -526,6 +531,7 @@ KY = {
     "Watertight mesh": "Жабык тор",
     "Watertight mesh. Ready to decimate and rig":
         "Жабык тор. Сейректетүүгө жана риггингге даяр",
+    "Watertight once welded": "Бириктиргенден кийин жабык",
     "Weld Vertices": "Чокуларды бириктирүү",
     "Weld distance": "Бириктирүү аралыгы",
     "Weld distance in Blender units":
@@ -755,6 +761,8 @@ AB = {
     "Shape keys": "Shape keys",
     "Small parts": "Ахәҭақәа хәыҷқәа",
     "Smaller Than": "Уаҟа еиҵоу",
+    "Split at the seams: welding %d duplicates closes it":
+        "Аԥҟарақәа рҿы еиҟәшоуп: %d ҩынтәтәу реидкылара иаркуеит",
     "Split normals ruin the shading after welding":
         "Еиҟәыҭхоу анормалқәа аидкылара ашьҭахь агәашә ирыцәымӡуеит",
     "Still not watertight": "Уажәгьы иакӡам",
@@ -804,6 +812,7 @@ AB = {
     "Watertight mesh": "Иаку аҳаԥшьа",
     "Watertight mesh. Ready to decimate and rig":
         "Иаку аҳаԥшьа. Адецимациа ни аригинг рзы иҟалоуп",
+    "Watertight once welded": "Реидкылара ашьҭахь иаку",
     "Weld Vertices": "Аӷәҷарҭақәа реидкылара",
     "Weld distance": "Аидкылара ахараҳара",
     "Weld distance in Blender units":

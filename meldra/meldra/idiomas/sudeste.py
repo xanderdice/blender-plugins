@@ -198,6 +198,8 @@ ID = {
     "Shape keys": "Shape key",
     "Small parts": "Bagian kecil",
     "Smaller Than": "Lebih kecil dari",
+    "Split at the seams: welding %d duplicates closes it":
+        "Terbelah di jahitan: menggabungkan %d duplikat menutupnya",
     "Split normals ruin the shading after welding":
         "Normal terbelah merusak shading setelah penggabungan",
     "Still not watertight": "Masih belum tertutup",
@@ -247,6 +249,7 @@ ID = {
     "Watertight mesh": "Mesh tertutup",
     "Watertight mesh. Ready to decimate and rig":
         "Mesh tertutup. Siap di-decimate dan di-rig",
+    "Watertight once welded": "Tertutup setelah digabung",
     "Weld Vertices": "Gabungkan verteks",
     "Weld distance": "Jarak penggabungan",
     "Weld distance in Blender units":
@@ -474,6 +477,8 @@ VI = {
     "Shape keys": "Shape key",
     "Small parts": "Mảnh nhỏ",
     "Smaller Than": "Nhỏ hơn",
+    "Split at the seams: welding %d duplicates closes it":
+        "Tách ở đường nối: hợp nhất %d đỉnh trùng sẽ làm kín",
     "Split normals ruin the shading after welding":
         "Pháp tuyến bị tách làm hỏng đổ bóng sau khi hợp nhất",
     "Still not watertight": "Vẫn chưa kín",
@@ -523,6 +528,7 @@ VI = {
     "Watertight mesh": "Lưới kín",
     "Watertight mesh. Ready to decimate and rig":
         "Lưới đã kín. Sẵn sàng giảm mặt và gắn xương",
+    "Watertight once welded": "Kín sau khi hợp nhất",
     "Weld Vertices": "Hợp nhất đỉnh",
     "Weld distance": "Khoảng cách hợp nhất",
     "Weld distance in Blender units":
@@ -736,6 +742,8 @@ TH = {
     "Shape keys": "Shape key",
     "Small parts": "ชิ้นเล็ก",
     "Smaller Than": "เล็กกว่า",
+    "Split at the seams: welding %d duplicates closes it":
+        "แยกตามตะเข็บ: เชื่อม %d จุดซ้ำแล้วจะปิดสนิท",
     "Split normals ruin the shading after welding":
         "นอร์มอลที่ถูกแยกจะทำให้การแรเงาเสียหลังการเชื่อม",
     "Still not watertight": "ยังไม่ปิดสนิทอยู่ดี",
@@ -784,6 +792,7 @@ TH = {
     "Watertight mesh": "เมชปิดสนิท",
     "Watertight mesh. Ready to decimate and rig":
         "เมชปิดสนิทแล้ว พร้อมลดจำนวนหน้าและใส่กระดูก",
+    "Watertight once welded": "ปิดสนิทเมื่อเชื่อมแล้ว",
     "Weld Vertices": "เชื่อมจุดยอด",
     "Weld distance": "ระยะเชื่อม",
     "Weld distance in Blender units": "ระยะเชื่อมในหน่วยของ Blender",

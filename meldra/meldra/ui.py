@@ -70,10 +70,14 @@ class MELDRA_PT_principal(Base, Panel):
         pintar_filas(caja, props.filas_informe(i))
 
         veredicto = caja.row()
-        veredicto.alert = not i.cerrada
-        veredicto.label(
-            text="Watertight mesh" if i.cerrada else "Not watertight",
-            icon='CHECKMARK' if i.cerrada else 'ERROR')
+        veredicto.alert = not (i.cerrada or i.cerrada_al_soldar)
+        if i.cerrada:
+            veredicto.label(text="Watertight mesh", icon='CHECKMARK')
+        elif i.cerrada_al_soldar:
+            veredicto.label(text="Watertight once welded", icon='INFO')
+            caja.label(text="Press Repair All first", icon='INFO')
+        else:
+            veredicto.label(text="Not watertight", icon='ERROR')
 
 
 class MELDRA_PT_ver(Base, Panel):

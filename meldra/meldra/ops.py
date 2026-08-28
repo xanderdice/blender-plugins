@@ -120,6 +120,10 @@ class MELDRA_OT_analizar(Operator):
         datos = analizar_en(context, context.active_object)
         if datos['cerrada']:
             self.report({'INFO'}, _("Watertight mesh. Ready to decimate and rig"))
+        elif datos['cerrada_al_soldar']:
+            self.report({'INFO'}, _(
+                "Split at the seams: welding %d duplicates closes it")
+                % datos['duplicados'])
         else:
             self.report(
                 {'WARNING'},
@@ -150,8 +154,12 @@ class MELDRA_OT_copiar_informe(Operator):
             lineas.append("  %-34s %10s  %s"
                           % (_(etiqueta), valor, "" if ok else "<--"))
         lineas.append("")
-        lineas.append(_("Watertight mesh") if informe.cerrada
-                      else _("Not watertight"))
+        if informe.cerrada:
+            lineas.append(_("Watertight mesh"))
+        elif informe.cerrada_al_soldar:
+            lineas.append(_("Watertight once welded"))
+        else:
+            lineas.append(_("Not watertight"))
         lineas.append(_("Ready") if informe.apto_para_rig else _("Not ready"))
         context.window_manager.clipboard = "\n".join(lineas)
         self.report({'INFO'}, _("Report copied to the clipboard"))

@@ -198,6 +198,8 @@ DA = {
     "Shape keys": "Shape keys",
     "Small parts": "Små stykker",
     "Smaller Than": "Mindre end",
+    "Split at the seams: welding %d duplicates closes it":
+        "Delt ved sømmene: at smelte %d dubletter sammen lukker den",
     "Split normals ruin the shading after welding":
         "Splittede normaler ødelægger shadingen efter sammensmeltning",
     "Still not watertight": "Stadig ikke lukket",
@@ -249,6 +251,7 @@ DA = {
     "Watertight mesh": "Lukket mesh",
     "Watertight mesh. Ready to decimate and rig":
         "Lukket mesh. Klar til at decimere og rigge",
+    "Watertight once welded": "Lukket når den svejses",
     "Weld Vertices": "Smelt vertices sammen",
     "Weld distance": "Sammensmeltningsafstand",
     "Weld distance in Blender units":
@@ -477,6 +480,8 @@ SV = {
     "Shape keys": "Shape keys",
     "Small parts": "Små delar",
     "Smaller Than": "Mindre än",
+    "Split at the seams: welding %d duplicates closes it":
+        "Delad vid sömmarna: att smälta samman %d dubbletter sluter den",
     "Split normals ruin the shading after welding":
         "Delade normaler förstör shadingen efter sammansmältningen",
     "Still not watertight": "Fortfarande inte sluten",
@@ -528,6 +533,7 @@ SV = {
     "Watertight mesh": "Slutet mesh",
     "Watertight mesh. Ready to decimate and rig":
         "Slutet mesh. Klart att decimera och rigga",
+    "Watertight once welded": "Sluten efter sammansmältning",
     "Weld Vertices": "Smält samman vertices",
     "Weld distance": "Sammansmältningsavstånd",
     "Weld distance in Blender units":
@@ -755,6 +761,8 @@ NB = {
     "Shape keys": "Shape keys",
     "Small parts": "Små deler",
     "Smaller Than": "Mindre enn",
+    "Split at the seams: welding %d duplicates closes it":
+        "Delt ved sømmene: å smelte sammen %d duplikater lukker den",
     "Split normals ruin the shading after welding":
         "Delte normaler ødelegger shadingen etter sammensmeltingen",
     "Still not watertight": "Fortsatt ikke lukket",
@@ -805,6 +813,7 @@ NB = {
     "Watertight mesh": "Lukket mesh",
     "Watertight mesh. Ready to decimate and rig":
         "Lukket mesh. Klar til å desimere og rigge",
+    "Watertight once welded": "Lukket etter sammensmelting",
     "Weld Vertices": "Smelt sammen vertices",
     "Weld distance": "Sammensmeltingsavstand",
     "Weld distance in Blender units":
@@ -1034,6 +1043,8 @@ FI = {
     "Shape keys": "Shape keyt",
     "Small parts": "Pienet palat",
     "Smaller Than": "Pienemmät kuin",
+    "Split at the seams: welding %d duplicates closes it":
+        "Halkaistu saumoista: %d kaksoiskappaleen yhdistäminen sulkee sen",
     "Split normals ruin the shading after welding":
         "Jaetut normaalit pilaavat varjostuksen yhdistämisen jälkeen",
     "Still not watertight": "Edelleen ei suljettu",
@@ -1084,6 +1095,7 @@ FI = {
     "Watertight mesh": "Suljettu verkko",
     "Watertight mesh. Ready to decimate and rig":
         "Suljettu verkko. Valmis harvennettavaksi ja rigattavaksi",
+    "Watertight once welded": "Suljettu yhdistämisen jälkeen",
     "Weld Vertices": "Yhdistä verteksit",
     "Weld distance": "Yhdistysetäisyys",
     "Weld distance in Blender units":

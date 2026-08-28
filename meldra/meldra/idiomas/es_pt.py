@@ -198,6 +198,8 @@ ES = {
     "Shape keys": "Shape keys",
     "Small parts": "Trozos pequeños",
     "Smaller Than": "Menores del",
+    "Split at the seams: welding %d duplicates closes it":
+        "Partida por las costuras: soldar %d duplicados la cierra",
     "Split normals ruin the shading after welding":
         "Los normales partidos estropean el sombreado después de soldar",
     "Still not watertight": "Sigue sin cerrar",
@@ -249,6 +251,7 @@ ES = {
     "Watertight mesh": "Malla cerrada",
     "Watertight mesh. Ready to decimate and rig":
         "Malla cerrada. Lista para decimar y riguear",
+    "Watertight once welded": "Cerrada al soldar",
     "Weld Vertices": "Soldar vértices",
     "Weld distance": "Soldadura calculada",
     "Weld distance in Blender units":
@@ -479,6 +482,8 @@ PT_BR = {
     "Shape keys": "Shape keys",
     "Small parts": "Partes pequenas",
     "Smaller Than": "Menores que",
+    "Split at the seams: welding %d duplicates closes it":
+        "Dividida nas costuras: soldar %d duplicados a fecha",
     "Split normals ruin the shading after welding":
         "As normais divididas estragam o sombreamento depois de soldar",
     "Still not watertight": "Continua sem fechar",
@@ -530,6 +535,7 @@ PT_BR = {
     "Watertight mesh": "Malha fechada",
     "Watertight mesh. Ready to decimate and rig":
         "Malha fechada. Pronta para decimar e riggar",
+    "Watertight once welded": "Fechada ao soldar",
     "Weld Vertices": "Soldar vértices",
     "Weld distance": "Distância de solda",
     "Weld distance in Blender units":

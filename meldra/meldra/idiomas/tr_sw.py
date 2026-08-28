@@ -196,6 +196,8 @@ TR = {
     "Shape keys": "Shape key'ler",
     "Small parts": "Küçük parçalar",
     "Smaller Than": "Şundan küçük",
+    "Split at the seams: welding %d duplicates closes it":
+        "Dikişlerden ayrılmış: %d yinelenen köşeyi birleştirmek kapatır",
     "Split normals ruin the shading after welding":
         "Bölünmüş normaller birleştirmeden sonra gölgelendirmeyi bozar",
     "Still not watertight": "Hâlâ kapalı değil",
@@ -244,6 +246,7 @@ TR = {
     "Watertight mesh": "Kapalı mesh",
     "Watertight mesh. Ready to decimate and rig":
         "Kapalı mesh. Yüz azaltmaya ve rig'lemeye hazır",
+    "Watertight once welded": "Birleştirilince kapalı",
     "Weld Vertices": "Köşeleri birleştir",
     "Weld distance": "Birleştirme mesafesi",
     "Weld distance in Blender units": "Blender birimlerinde birleştirme mesafesi",
@@ -470,6 +473,9 @@ SW = {
     "Shape keys": "Shape keys",
     "Small parts": "Vipande vidogo",
     "Smaller Than": "Vidogo kuliko",
+    "Split at the seams: welding %d duplicates closes it":
+        "Imegawanywa kwenye mishono: kuunganisha vipeo %d vilivyorudiwa "
+        "kunaifunga",
     "Split normals ruin the shading after welding":
         "Normali zilizogawanywa huharibu kivuli baada ya kuunganisha",
     "Still not watertight": "Bado haijafungwa",
@@ -519,6 +525,7 @@ SW = {
     "Watertight mesh": "Matundu yamefungwa",
     "Watertight mesh. Ready to decimate and rig":
         "Matundu yamefungwa. Tayari kupunguza nyuso na kuweka mifupa",
+    "Watertight once welded": "Imefungwa baada ya kuunganisha",
     "Weld Vertices": "Unganisha vipeo",
     "Weld distance": "Umbali wa kuunganisha",
     "Weld distance in Blender units":

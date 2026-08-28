@@ -199,6 +199,8 @@ PL = {
     "Shape keys": "Shape keys",
     "Small parts": "Małe kawałki",
     "Smaller Than": "Mniejsze niż",
+    "Split at the seams: welding %d duplicates closes it":
+        "Rozdzielona na szwach: scalenie %d duplikatów ją zamyka",
     "Split normals ruin the shading after welding":
         "Rozdzielone normalne psują cieniowanie po scaleniu",
     "Still not watertight": "Nadal niezamknięta",
@@ -249,6 +251,7 @@ PL = {
     "Watertight mesh": "Siatka zamknięta",
     "Watertight mesh. Ready to decimate and rig":
         "Siatka zamknięta. Gotowa do decymacji i riggowania",
+    "Watertight once welded": "Zamknięta po scaleniu",
     "Weld Vertices": "Scal wierzchołki",
     "Weld distance": "Odległość scalania",
     "Weld distance in Blender units":
@@ -477,6 +480,8 @@ CS = {
     "Shape keys": "Shape keys",
     "Small parts": "Malé kusy",
     "Smaller Than": "Menší než",
+    "Split at the seams: welding %d duplicates closes it":
+        "Rozdělená ve švech: sloučení %d duplikátů ji uzavře",
     "Split normals ruin the shading after welding":
         "Rozdělené normály zkazí stínování po sloučení",
     "Still not watertight": "Pořád není uzavřená",
@@ -526,6 +531,7 @@ CS = {
     "Watertight mesh": "Uzavřená síť",
     "Watertight mesh. Ready to decimate and rig":
         "Uzavřená síť. Připravena na decimaci a rigging",
+    "Watertight once welded": "Uzavřená po sloučení",
     "Weld Vertices": "Sloučit vrcholy",
     "Weld distance": "Vzdálenost slučování",
     "Weld distance in Blender units":
@@ -755,6 +761,8 @@ SK = {
     "Shape keys": "Shape keys",
     "Small parts": "Malé kusy",
     "Smaller Than": "Menšie než",
+    "Split at the seams: welding %d duplicates closes it":
+        "Rozdelená vo švoch: zlúčenie %d duplikátov ju uzavrie",
     "Split normals ruin the shading after welding":
         "Rozdelené normály pokazia tieňovanie po zlúčení",
     "Still not watertight": "Stále nie je uzavretá",
@@ -803,6 +811,7 @@ SK = {
     "Watertight mesh": "Uzavretá sieť",
     "Watertight mesh. Ready to decimate and rig":
         "Uzavretá sieť. Pripravená na decimáciu a rigging",
+    "Watertight once welded": "Uzavretá po zlúčení",
     "Weld Vertices": "Zlúčiť vrcholy",
     "Weld distance": "Vzdialenosť zlučovania",
     "Weld distance in Blender units":

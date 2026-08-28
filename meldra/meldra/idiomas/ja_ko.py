@@ -181,6 +181,8 @@ JA = {
     "Shape keys": "シェイプキー",
     "Small parts": "小さなパーツ",
     "Smaller Than": "これ未満",
+    "Split at the seams: welding %d duplicates closes it":
+        "シームで分割: %d 個の重複を結合すれば閉じます",
     "Split normals ruin the shading after welding":
         "分割された法線は結合後のシェーディングを台無しにします",
     "Still not watertight": "まだ閉じていません",
@@ -228,6 +230,7 @@ JA = {
     "Watertight mesh": "閉じたメッシュ",
     "Watertight mesh. Ready to decimate and rig":
         "閉じたメッシュです。デシメートとリギングができます",
+    "Watertight once welded": "結合すれば閉じます",
     "Weld Vertices": "頂点を結合",
     "Weld distance": "結合距離",
     "Weld distance in Blender units": "Blender 単位での結合距離",
@@ -435,6 +438,8 @@ KO = {
     "Shape keys": "셰이프 키",
     "Small parts": "작은 조각",
     "Smaller Than": "이보다 작은",
+    "Split at the seams: welding %d duplicates closes it":
+        "심에서 분리됨: 중복 %d개를 병합하면 닫힙니다",
     "Split normals ruin the shading after welding":
         "분할된 노멀은 병합 후 셰이딩을 망칩니다",
     "Still not watertight": "여전히 닫혀 있지 않음",
@@ -482,6 +487,7 @@ KO = {
     "Watertight mesh": "닫힌 메시",
     "Watertight mesh. Ready to decimate and rig":
         "닫힌 메시입니다. 데시메이트와 리깅을 할 수 있습니다",
+    "Watertight once welded": "병합하면 닫힘",
     "Weld Vertices": "정점 병합",
     "Weld distance": "병합 거리",
     "Weld distance in Blender units": "블렌더 단위의 병합 거리",

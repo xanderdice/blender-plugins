@@ -175,6 +175,8 @@ HANS = {
     "Shape keys": "形态键",
     "Small parts": "细小碎块",
     "Smaller Than": "小于",
+    "Split at the seams: welding %d duplicates closes it":
+        "在接缝处被拆分：合并 %d 个重复顶点即可闭合",
     "Split normals ruin the shading after welding": "拆分法线会在合并后毁掉着色",
     "Still not watertight": "仍然未闭合",
     "Summary": "小结",
@@ -221,6 +223,7 @@ HANS = {
     "Watertight mesh": "网格已闭合",
     "Watertight mesh. Ready to decimate and rig":
         "网格已闭合。可以精简和绑定骨骼了",
+    "Watertight once welded": "合并后即闭合",
     "Weld Vertices": "合并顶点",
     "Weld distance": "合并距离",
     "Weld distance in Blender units": "以 Blender 单位表示的合并距离",
@@ -422,6 +425,8 @@ HANT = {
     "Shape keys": "形態鍵",
     "Small parts": "細小碎塊",
     "Smaller Than": "小於",
+    "Split at the seams: welding %d duplicates closes it":
+        "在接縫處被拆分：合併 %d 個重複頂點即可閉合",
     "Split normals ruin the shading after welding": "拆分法線會在合併後毀掉著色",
     "Still not watertight": "仍然未閉合",
     "Summary": "小結",
@@ -468,6 +473,7 @@ HANT = {
     "Watertight mesh": "網格已閉合",
     "Watertight mesh. Ready to decimate and rig":
         "網格已閉合。可以精簡與綁定骨骼了",
+    "Watertight once welded": "合併後即閉合",
     "Weld Vertices": "合併頂點",
     "Weld distance": "合併距離",
     "Weld distance in Blender units": "以 Blender 單位表示的合併距離",

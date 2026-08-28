@@ -188,6 +188,8 @@ AR = {
     "Shape keys": "Shape keys",
     "Small parts": "قطع صغيرة",
     "Smaller Than": "أصغر من",
+    "Split at the seams: welding %d duplicates closes it":
+        "مقسّمة عند الدرزات: دمج %d رأس مكرر يغلقها",
     "Split normals ruin the shading after welding":
         "النورمالات المقسّمة تفسد التظليل بعد الدمج",
     "Still not watertight": "ما زالت غير مغلقة",
@@ -236,6 +238,7 @@ AR = {
     "Watertight mesh": "شبكة مغلقة",
     "Watertight mesh. Ready to decimate and rig":
         "شبكة مغلقة. جاهزة للتقليل وللتحريك بالعظام",
+    "Watertight once welded": "مغلقة بعد الدمج",
     "Weld Vertices": "دمج الرؤوس",
     "Weld distance": "مسافة الدمج",
     "Weld distance in Blender units": "مسافة الدمج بوحدات Blender",
@@ -452,6 +455,8 @@ HE = {
     "Shape keys": "Shape keys",
     "Small parts": "חלקים קטנים",
     "Smaller Than": "קטנים מ-",
+    "Split at the seams: welding %d duplicates closes it":
+        "מפוצלת בתפרים: מיזוג %d כפילויות סוגר אותה",
     "Split normals ruin the shading after welding":
         "נורמלים מפוצלים הורסים את ההצללה אחרי המיזוג",
     "Still not watertight": "עדיין לא סגורה",
@@ -500,6 +505,7 @@ HE = {
     "Watertight mesh": "רשת סגורה",
     "Watertight mesh. Ready to decimate and rig":
         "רשת סגורה. מוכנה לדילול ולריגינג",
+    "Watertight once welded": "סגורה לאחר מיזוג",
     "Weld Vertices": "מזג קודקודים",
     "Weld distance": "מרחק מיזוג",
     "Weld distance in Blender units": "מרחק מיזוג ביחידות Blender",
@@ -720,6 +726,8 @@ FA = {
     "Shape keys": "Shape keys",
     "Small parts": "تکه‌های کوچک",
     "Smaller Than": "کوچک‌تر از",
+    "Split at the seams: welding %d duplicates closes it":
+        "در درزها جدا شده: ادغام %d تکراری آن را می‌بندد",
     "Split normals ruin the shading after welding":
         "نرمال‌های تفکیک‌شده سایه‌زنی را بعد از ادغام خراب می‌کنند",
     "Still not watertight": "هنوز بسته نیست",
@@ -768,6 +776,7 @@ FA = {
     "Watertight mesh": "مش بسته",
     "Watertight mesh. Ready to decimate and rig":
         "مش بسته است. آمادهٔ کاهش وجوه و ریگ کردن",
+    "Watertight once welded": "پس از ادغام بسته",
     "Weld Vertices": "ادغام رأس‌ها",
     "Weld distance": "فاصلهٔ ادغام",
     "Weld distance in Blender units": "فاصلهٔ ادغام در واحدهای Blender",

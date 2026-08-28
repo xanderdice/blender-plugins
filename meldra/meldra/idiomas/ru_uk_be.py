@@ -202,6 +202,8 @@ RU = {
     "Shape keys": "Shape keys",
     "Small parts": "Мелкие куски",
     "Smaller Than": "Меньше чем",
+    "Split at the seams: welding %d duplicates closes it":
+        "Разрезан по швам: слияние %d дубликатов замыкает его",
     "Split normals ruin the shading after welding":
         "Разделённые нормали портят затенение после слияния",
     "Still not watertight": "Всё ещё не замкнут",
@@ -252,6 +254,7 @@ RU = {
     "Watertight mesh": "Замкнутый меш",
     "Watertight mesh. Ready to decimate and rig":
         "Замкнутый меш. Готов к упрощению и риггингу",
+    "Watertight once welded": "Замкнут после слияния",
     "Weld Vertices": "Слить вершины",
     "Weld distance": "Расстояние слияния",
     "Weld distance in Blender units":
@@ -482,6 +485,8 @@ UK = {
     "Shape keys": "Shape keys",
     "Small parts": "Дрібні шматки",
     "Smaller Than": "Менші за",
+    "Split at the seams: welding %d duplicates closes it":
+        "Розрізана по швах: злиття %d дублікатів її замикає",
     "Split normals ruin the shading after welding":
         "Розділені нормалі псують затінення після зливання",
     "Still not watertight": "Досі не замкнена",
@@ -531,6 +536,7 @@ UK = {
     "Watertight mesh": "Замкнена сітка",
     "Watertight mesh. Ready to decimate and rig":
         "Замкнена сітка. Готова до спрощення і ригінгу",
+    "Watertight once welded": "Замкнена після злиття",
     "Weld Vertices": "Злити вершини",
     "Weld distance": "Відстань зливання",
     "Weld distance in Blender units": "Відстань зливання в одиницях Blender",
@@ -761,6 +767,8 @@ BE = {
     "Shape keys": "Shape keys",
     "Small parts": "Дробныя кавалкі",
     "Smaller Than": "Меншыя за",
+    "Split at the seams: welding %d duplicates closes it":
+        "Разрэзана па швах: зліццё %d дублікатаў яе замыкае",
     "Split normals ruin the shading after welding":
         "Падзеленыя нармалі псуюць зацяненне пасля зліцця",
     "Still not watertight": "Усё яшчэ не замкнёная",
@@ -812,6 +820,7 @@ BE = {
     "Watertight mesh": "Замкнёная сетка",
     "Watertight mesh. Ready to decimate and rig":
         "Замкнёная сетка. Гатова да спрашчэння і рыгінгу",
+    "Watertight once welded": "Замкнёная пасля зліцця",
     "Weld Vertices": "Зліць вяршыні",
     "Weld distance": "Адлегласць зліцця",
     "Weld distance in Blender units": "Адлегласць зліцця ў адзінках Blender",

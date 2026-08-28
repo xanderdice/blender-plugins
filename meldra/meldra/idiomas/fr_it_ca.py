@@ -202,6 +202,8 @@ FR = {
     "Shape keys": "Clés de forme",
     "Small parts": "Petits morceaux",
     "Smaller Than": "Plus petits que",
+    "Split at the seams: welding %d duplicates closes it":
+        "Séparé aux coutures : fusionner %d doublons le referme",
     "Split normals ruin the shading after welding":
         "Les normales scindées ruinent l'ombrage après la fusion",
     "Still not watertight": "Toujours pas étanche",
@@ -255,6 +257,7 @@ FR = {
     "Watertight mesh": "Maillage étanche",
     "Watertight mesh. Ready to decimate and rig":
         "Maillage étanche. Prêt à décimer et à rigger",
+    "Watertight once welded": "Étanche une fois fusionné",
     "Weld Vertices": "Fusionner les sommets",
     "Weld distance": "Distance de fusion",
     "Weld distance in Blender units": "Distance de fusion en unités Blender",
@@ -486,6 +489,8 @@ IT = {
     "Shape keys": "Shape key",
     "Small parts": "Pezzi piccoli",
     "Smaller Than": "Più piccoli del",
+    "Split at the seams: welding %d duplicates closes it":
+        "Divisa sulle cuciture: fondere %d duplicati la chiude",
     "Split normals ruin the shading after welding":
         "Le normali divise rovinano lo shading dopo la fusione",
     "Still not watertight": "Continua a non essere chiusa",
@@ -539,6 +544,7 @@ IT = {
     "Watertight mesh": "Mesh chiusa",
     "Watertight mesh. Ready to decimate and rig":
         "Mesh chiusa. Pronta per decimare e per il rig",
+    "Watertight once welded": "Chiusa dopo la fusione",
     "Weld Vertices": "Fondi i vertici",
     "Weld distance": "Distanza di fusione",
     "Weld distance in Blender units": "Distanza di fusione in unità Blender",
@@ -765,6 +771,8 @@ CA = {
     "Shape keys": "Shape keys",
     "Small parts": "Trossos petits",
     "Smaller Than": "Més petits del",
+    "Split at the seams: welding %d duplicates closes it":
+        "Partida per les costures: soldar %d duplicats la tanca",
     "Split normals ruin the shading after welding":
         "Les normals partides espatllen l'ombrejat després de soldar",
     "Still not watertight": "Continua sense tancar",
@@ -816,6 +824,7 @@ CA = {
     "Watertight mesh": "Malla tancada",
     "Watertight mesh. Ready to decimate and rig":
         "Malla tancada. Llesta per decimar i per al rig",
+    "Watertight once welded": "Tancada en soldar",
     "Weld Vertices": "Soldar vèrtexs",
     "Weld distance": "Distància de soldadura",
     "Weld distance in Blender units":

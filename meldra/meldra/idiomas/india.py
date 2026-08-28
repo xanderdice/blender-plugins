@@ -194,6 +194,8 @@ HI = {
     "Shape keys": "Shape keys",
     "Small parts": "छोटे टुकड़े",
     "Smaller Than": "इससे छोटे",
+    "Split at the seams: welding %d duplicates closes it":
+        "सीवन पर बँटा है: %d दोहरे जोड़ने से बंद हो जाता है",
     "Split normals ruin the shading after welding":
         "बँटे हुए नॉर्मल जोड़ने के बाद शेडिंग बिगाड़ देते हैं",
     "Still not watertight": "अब भी बंद नहीं है",
@@ -242,6 +244,7 @@ HI = {
     "Watertight mesh": "मेश बंद है",
     "Watertight mesh. Ready to decimate and rig":
         "मेश बंद है। फलक घटाने और रिग करने के लिए तैयार",
+    "Watertight once welded": "जोड़ने पर बंद",
     "Weld Vertices": "शीर्ष जोड़ें",
     "Weld distance": "जोड़ने की दूरी",
     "Weld distance in Blender units": "Blender इकाइयों में जोड़ने की दूरी",
@@ -464,6 +467,8 @@ UR = {
     "Shape keys": "Shape keys",
     "Small parts": "چھوٹے ٹکڑے",
     "Smaller Than": "اس سے چھوٹے",
+    "Split at the seams: welding %d duplicates closes it":
+        "سیون پر بٹا ہوا: %d دہرے جوڑنے سے بند ہو جاتا ہے",
     "Split normals ruin the shading after welding":
         "بٹے ہوئے نارمل جوڑنے کے بعد شیڈنگ خراب کر دیتے ہیں",
     "Still not watertight": "اب بھی بند نہیں ہے",
@@ -512,6 +517,7 @@ UR = {
     "Watertight mesh": "میش بند ہے",
     "Watertight mesh. Ready to decimate and rig":
         "میش بند ہے۔ سطحیں کم کرنے اور رِگ کرنے کے لیے تیار",
+    "Watertight once welded": "جوڑنے پر بند",
     "Weld Vertices": "ورٹیکس جوڑیں",
     "Weld distance": "جوڑنے کا فاصلہ",
     "Weld distance in Blender units": "Blender اکائیوں میں جوڑنے کا فاصلہ",
@@ -740,6 +746,8 @@ TA = {
     "Shape keys": "Shape keys",
     "Small parts": "சிறிய துண்டுகள்",
     "Smaller Than": "இதைவிடச் சிறியவை",
+    "Split at the seams: welding %d duplicates closes it":
+        "தையல்களில் பிரிந்துள்ளது: %d நகல்களை இணைத்தால் மூடும்",
     "Split normals ruin the shading after welding":
         "பிரிக்கப்பட்ட நார்மல்கள் இணைப்புக்குப் பிறகு நிழலைக் கெடுக்கும்",
     "Still not watertight": "இன்னும் மூடப்படவில்லை",
@@ -791,6 +799,7 @@ TA = {
     "Watertight mesh": "மூடிய வலை",
     "Watertight mesh. Ready to decimate and rig":
         "மூடிய வலை. முகங்களைக் குறைக்கவும் ரிக் செய்யவும் தயார்",
+    "Watertight once welded": "இணைத்தால் மூடும்",
     "Weld Vertices": "முனைகளை இணை",
     "Weld distance": "இணைப்புத் தூரம்",
     "Weld distance in Blender units": "Blender அலகுகளில் இணைப்புத் தூரம்",
@@ -1018,6 +1027,8 @@ ML = {
     "Shape keys": "Shape keys",
     "Small parts": "ചെറിയ കഷണങ്ങൾ",
     "Smaller Than": "ഇതിലും ചെറുത്",
+    "Split at the seams: welding %d duplicates closes it":
+        "തുന്നലുകളിൽ പിളർന്നു: %d ഇരട്ടകൾ ലയിപ്പിച്ചാൽ അടയും",
     "Split normals ruin the shading after welding":
         "വിഭജിച്ച നോർമലുകൾ ലയനത്തിന് ശേഷം ഷേഡിംഗ് നശിപ്പിക്കുന്നു",
     "Still not watertight": "ഇപ്പോഴും അടഞ്ഞിട്ടില്ല",
@@ -1067,6 +1078,7 @@ ML = {
     "Watertight mesh": "അടഞ്ഞ മെഷ്",
     "Watertight mesh. Ready to decimate and rig":
         "അടഞ്ഞ മെഷ്. മുഖങ്ങൾ കുറയ്ക്കാനും റിഗ് ചെയ്യാനും തയ്യാർ",
+    "Watertight once welded": "ലയിപ്പിച്ചാൽ അടയും",
     "Weld Vertices": "ശീർഷങ്ങൾ ലയിപ്പിക്കുക",
     "Weld distance": "ലയന ദൂരം",
     "Weld distance in Blender units": "Blender യൂണിറ്റുകളിലെ ലയന ദൂരം",

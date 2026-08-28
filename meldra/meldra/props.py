@@ -58,6 +58,7 @@ class MELDRA_Informe(PropertyGroup):
     euler: IntProperty(default=0)
     volumen: FloatProperty(default=0.0)
     cerrada: BoolProperty(default=False)
+    cerrada_al_soldar: BoolProperty(default=False)
     invertida: BoolProperty(default=False)
     diagonal: FloatProperty(default=0.0)
     umbral: FloatProperty(default=0.0, precision=6)

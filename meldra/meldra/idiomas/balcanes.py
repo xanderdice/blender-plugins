@@ -198,6 +198,8 @@ SL = {
     "Shape keys": "Shape keys",
     "Small parts": "Majhni kosi",
     "Smaller Than": "Manjši od",
+    "Split at the seams: welding %d duplicates closes it":
+        "Razcepljena po šivih: združitev %d podvojenih jo zapre",
     "Split normals ruin the shading after welding":
         "Razdeljene normale pokvarijo senčenje po združevanju",
     "Still not watertight": "Še vedno ni zaprta",
@@ -247,6 +249,7 @@ SL = {
     "Watertight mesh": "Zaprta mreža",
     "Watertight mesh. Ready to decimate and rig":
         "Zaprta mreža. Pripravljena za decimiranje in rigging",
+    "Watertight once welded": "Zaprta po združitvi",
     "Weld Vertices": "Združi oglišča",
     "Weld distance": "Razdalja združevanja",
     "Weld distance in Blender units":
@@ -474,6 +477,8 @@ SR = {
     "Shape keys": "Shape keys",
     "Small parts": "Мали делови",
     "Smaller Than": "Мањи од",
+    "Split at the seams: welding %d duplicates closes it":
+        "Раздвојена по шавовима: спајање %d дупликата је затвара",
     "Split normals ruin the shading after welding":
         "Подељене нормале кваре сенчење после спајања",
     "Still not watertight": "И даље није затворена",
@@ -523,6 +528,7 @@ SR = {
     "Watertight mesh": "Затворена мрежа",
     "Watertight mesh. Ready to decimate and rig":
         "Затворена мрежа. Спремна за децимирање и ригинг",
+    "Watertight once welded": "Затворена након спајања",
     "Weld Vertices": "Спој темена",
     "Weld distance": "Растојање спајања",
     "Weld distance in Blender units": "Растојање спајања у Blender јединицама",
@@ -771,6 +777,8 @@ BG = {
     "Shape keys": "Shape keys",
     "Small parts": "Малки парчета",
     "Smaller Than": "По-малки от",
+    "Split at the seams: welding %d duplicates closes it":
+        "Разделена по шевовете: сливането на %d дубликата я затваря",
     "Split normals ruin the shading after welding":
         "Разделените нормали развалят засенчването след сливането",
     "Still not watertight": "Все още не е затворена",
@@ -821,6 +829,7 @@ BG = {
     "Watertight mesh": "Затворена мрежа",
     "Watertight mesh. Ready to decimate and rig":
         "Затворена мрежа. Готова за децимиране и ригване",
+    "Watertight once welded": "Затворена след сливане",
     "Weld Vertices": "Слей върховете",
     "Weld distance": "Разстояние на сливане",
     "Weld distance in Blender units":
